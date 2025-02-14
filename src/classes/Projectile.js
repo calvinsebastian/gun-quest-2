@@ -11,8 +11,6 @@ export class Projectile {
     // Ensure the direction vector is normalized.
     this.direction = direction.clone().normalize();
 
-    console.log("Projectile direction on creation: ", this.direction);
-
     // Initialize mesh (e.g., a small sphere representing the projectile)
     const geometry = new THREE.SphereGeometry(0.025, 8, 8);
     const material = new THREE.MeshStandardMaterial({
@@ -30,9 +28,6 @@ export class Projectile {
   update(deltaTime) {
     // Move the projectile in the direction it's facing
 
-    console.log("Projectile Position: ", this.mesh.position);
-    console.log("Projectile Direction: ", this.direction);
-
     // Move the projectile in the direction it's facing
     const velocity = this.direction.clone().multiplyScalar(this.speed);
     this.mesh.position.add(velocity.multiplyScalar(deltaTime));
@@ -40,14 +35,11 @@ export class Projectile {
     // Update the age of the projectile
     this.age += deltaTime;
 
-    console.log(this.age);
-
     // If the projectile has lived too long, remove it
     if (this.age > this.lifetime) {
       this.scene.remove(this.mesh);
 
       if (this.onDestroy) {
-        console.log("Destroying Projectile");
         this.onDestroy(this);
       }
     }

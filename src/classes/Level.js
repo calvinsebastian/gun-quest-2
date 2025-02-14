@@ -133,7 +133,7 @@ export class Level {
       metalnessMap: this.floorTextures.metallic,
       aoMap: this.floorTextures.ao,
       displacementMap: this.floorTextures.height,
-      displacementScale: 0.1,
+      displacementScale: 0.5,
       side: THREE.DoubleSide,
     });
 
@@ -152,7 +152,7 @@ export class Level {
       metalnessMap: this.ceilingTextures.metallic,
       aoMap: this.ceilingTextures.ao,
       displacementMap: this.ceilingTextures.height,
-      displacementScale: 0.1,
+      displacementScale: 0.5,
       side: THREE.DoubleSide,
     });
 
@@ -173,7 +173,7 @@ export class Level {
       metalnessMap: this.wallTextures.metallic,
       aoMap: this.wallTextures.ao,
       displacementMap: this.wallTextures.height,
-      displacementScale: 0.05,
+      displacementScale: 0,
       side: THREE.DoubleSide,
     });
 

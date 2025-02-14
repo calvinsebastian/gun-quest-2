@@ -2,9 +2,15 @@ import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Player } from "./Player";
 import { Level } from "./Level";
+import { Enemy } from "./Enemy";
+import { CollisionManager } from "./CollisionManager";
 
 export class Game {
   constructor() {
+    //////////////////////////////////////////////////////////////////
+    //  ----------------------  SCENE SETUP  ---------------------  //
+    //////////////////////////////////////////////////////////////////
+
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(
       50,
@@ -17,23 +23,41 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+    this.scene.add(ambientLight);
 
     // Add loading screen overlay
     this.loadingScreen = this.createLoadingScreen();
     document.body.appendChild(this.loadingScreen);
 
-    // Loading Manager to track loading progress
+    //////////////////////////////////////////////////////////////////
+    //  --------------------- LOADING MANAGER  -------------------  //
+    //////////////////////////////////////////////////////////////////
+
     this.loadingManager = new THREE.LoadingManager();
 
     this.loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
       console.log(`Started loading: ${url}`);
     };
 
-    // When all assets are loaded, we hide the loading screen and start the game
     this.loadingManager.onLoad = () => {
-      console.log("Loading complete!");
-      this.loadingScreen.style.display = "none"; // Hide loading screen
-      this.isLoading = false; // Mark as not loading
+      setTimeout(() => {
+        console.log("Loading complete!");
+        this.loadingScreen.innerHTML = ``;
+        this.loadingScreen.innerHTML = `<button id="start-button">Start</button>`;
+        const startButton = document.getElementById("start-button");
+
+        startButton.addEventListener("click", () => {
+          if (!this.isLoading) {
+            console.log("clicked");
+            this.hideLoadingScreen();
+            this.controls.lock();
+            this.enablePlayerInput();
+            this.player.lockedControls = false;
+          }
+        });
+        this.isLoading = false;
+      }, 4000);
     };
 
     this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
@@ -47,23 +71,36 @@ export class Game {
       console.error(`Error loading: ${url}`);
     };
 
-    // Instantiate player and level
-    this.player = new Player(this.camera, this.scene);
-    this.level = new Level(this.scene, this.loadingManager); // Pass loadingManager to Level
+    //////////////////////////////////////////////////////////////////
+    //  -------------------  COLLISION MANAGER  ------------------  //
+    //////////////////////////////////////////////////////////////////
 
-    // PointerLockControls for camera control
+    this.collisionManager = new CollisionManager(this.scene);
+
+    //////////////////////////////////////////////////////////////////
+    //  --------------------  EVENT LISTENERS  -------------------  //
+    //////////////////////////////////////////////////////////////////
+
+    document.body.addEventListener("click", () => {
+      if (!this.player.lockedControls) {
+        this.hideLoadingScreen();
+        this.controls.lock();
+        this.enablePlayerInput();
+        this.player.lockedControls = false;
+      }
+    });
+
+    //////////////////////////////////////////////////////////////////
+    //  ----------------------  GAME CLASSES  --------------------  //
+    //////////////////////////////////////////////////////////////////
+
     this.controls = new PointerLockControls(
       this.camera,
       this.renderer.domElement
     );
-
-    // Lock pointer on click, only after assets have loaded
-    document.body.addEventListener("click", () => {
-      if (!this.isLoading) {
-        this.controls.lock();
-        this.enablePlayerInput();
-      }
-    });
+    this.player = new Player(this.camera, this.scene, this.collisionManager);
+    this.level = new Level(this.scene, this.loadingManager);
+    this.enemies = [];
 
     this.isLoading = true; // Set loading flag to true while assets load
     this.animate = this.animate.bind(this);
@@ -77,6 +114,10 @@ export class Game {
     });
   }
 
+  hideLoadingScreen() {
+    this.loadingScreen.style.display = "none"; // Hide loading screen
+  }
+
   // Create the loading screen
   createLoadingScreen() {
     const loadingScreen = document.createElement("div");
@@ -85,7 +126,7 @@ export class Game {
     loadingScreen.style.left = "0";
     loadingScreen.style.width = "100%";
     loadingScreen.style.height = "100%";
-    loadingScreen.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    loadingScreen.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
     loadingScreen.style.color = "white";
     loadingScreen.style.display = "flex";
     loadingScreen.style.flexDirection = "column";
@@ -106,6 +147,14 @@ export class Game {
     this.isLoading = false; // Disable loading flag
   }
 
+  manageEnemies() {
+    if (this.enemies.length < 1) {
+      console.log("adding an enemy");
+      const enemy = new Enemy(this.scene, this.player, 3);
+      this.enemies.push(enemy);
+    }
+  }
+
   // Main animation loop
   animate() {
     const currentTime = performance.now(); // Get the current time in milliseconds
@@ -114,7 +163,17 @@ export class Game {
 
     requestAnimationFrame(this.animate);
 
-    if (!this.isLoading) {
+    if (!this.isLoading && !this.player.lockedControls) {
+      this.manageEnemies();
+
+      this.enemies.forEach((enemy) => {
+        enemy.update(deltaTime);
+
+        if (this.collisionManager.checkEnemyCollisions(enemy, this.player)) {
+          console.log("Enemy collided with player!");
+        }
+      });
+
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
       this.level.update(deltaTime); // Pass deltaTime to the level's update function
 

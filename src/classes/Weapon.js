@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { Projectile } from "./Projectile";
+import { playSound } from "../audio/soundManager.js";
+import gunSounds from "../audio/assets/gunshot1.wav";
+
+console.log(gunSounds);
 
 export class Weapon {
   constructor(scene, player) {
@@ -12,7 +16,7 @@ export class Weapon {
 
     // Listen for mouse click to shoot
     window.addEventListener("mousedown", () => {
-      this.shoot();
+      if (!this.player.lockedControls) this.shoot();
     });
   }
 
@@ -60,11 +64,11 @@ export class Weapon {
     weaponGroup.add(handleMesh);
     weaponGroup.add(barrelMesh);
     weaponGroup.add(bodyMesh);
-
     return weaponGroup;
   }
 
   shoot() {
+    playSound("/audio/assets/gunshot1.wav", 0.5);
     // Get the position and direction of the shot
     const direction = this.player.camera.getWorldDirection(new THREE.Vector3());
     const position = this.weaponMesh.position
