@@ -29,6 +29,8 @@ export class Player {
     this.camera.position.set(0, this.cameraHeight, 0); // Position the player at ground level
     this.flashlight = new Flashlight(scene);
     this.weapon = new Weapon(scene, this);
+
+    this.enemiesKilled = { pistol: 0, total: 0 };
   }
 
   createBoundingBox() {

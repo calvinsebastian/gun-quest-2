@@ -6,8 +6,10 @@ export class Weapon {
   constructor(scene, player) {
     this.scene = scene;
     this.player = player;
+    this.name = "pistol";
     this.weaponMesh = this.createWeaponMesh();
     this.scene.add(this.weaponMesh);
+    this.damage = 3;
 
     this.projectiles = [];
 
@@ -90,7 +92,6 @@ export class Weapon {
     );
 
     this.projectiles.push(projectile);
-    this.scene.add(projectile.mesh);
 
     // Create the muzzle flash light
     const muzzleFlash = new THREE.PointLight(0xffffff, 10, 10, 2); // White light, intensity of 10, distance of 5, and decay of 2

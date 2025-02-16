@@ -6,6 +6,7 @@ export class CollisionManager {
     this.wallObjects = this.scene.children.filter(
       (object) => object.isWall === true
     ); // Static objects (walls) only need to be checked once
+    this.raycaster = new THREE.Raycaster(); // Raycaster for projectile collisions
   }
 
   // Check for collisions between a player and static objects (optimized for walls)
@@ -33,13 +34,22 @@ export class CollisionManager {
     return false;
   }
 
-  // Check for projectile collisions (with dynamic objects like enemies)
-  checkProjectileCollisions(projectile, entity) {
-    if (projectile.boundingBox.intersectsBox(entity.boundingBox)) {
-      // Collision detected
-      return true;
+  // Use raycasting to check if a projectile hits an enemy
+  checkProjectileCollisionsWithRay(proj, enemy) {
+    this.raycaster.ray.origin.copy(proj.origin); // Set ray start point as the projectile's position
+    this.raycaster.ray.direction.copy(proj.direction); // Set ray direction from the projectile's direction
+
+    // Check if the ray intersects with the enemy's mesh
+    const intersects = this.raycaster.intersectObject(enemy.mesh);
+
+    // If the ray intersects the enemy, handle the collision
+    if (intersects.length > 0) {
+      console.log("Projectile hit the enemy!");
+      proj.onDestroy(proj); // Destroy the projectile
+      return true; // Return true when a collision is detected
     }
-    return false;
+
+    return false; // No collision
   }
 
   // Method for updating bounding boxes of static objects (if needed)

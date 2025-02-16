@@ -5,32 +5,34 @@ export class Projectile {
   constructor(scene, origin, direction, onDestroy) {
     this.scene = scene;
     this.onDestroy = onDestroy;
+    this.origin = origin;
+    this.direction = direction.clone().normalize();
     this.age = 0;
     this.lifetime = 0.5; // Lifetime in seconds
 
     // Ensure the direction vector is normalized.
-    this.direction = direction.clone().normalize();
 
     // Initialize mesh (e.g., a small sphere representing the projectile)
-    const geometry = new THREE.SphereGeometry(0.025, 8, 8);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xb08d57, // Bronzy gold color
-      metalness: 0.8, // High metalness to make it shiny
-      roughness: 0.4, // Slight roughness to give a realistic metallic surface
-    });
-    this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.position.copy(origin); // Start at the origin
-    this.scene.add(this.mesh);
+    // const geometry = new THREE.SphereGeometry(0.025, 8, 8);
+    // const material = new THREE.MeshStandardMaterial({
+    //   color: 0xb08d57, // Bronzy gold color
+    //   metalness: 0.8, // High metalness to make it shiny
+    //   roughness: 0.4, // Slight roughness to give a realistic metallic surface
+    // });
+    // this.mesh = new THREE.Mesh(geometry, material);
+    // this.mesh.position.copy(origin); // Start at the origin
 
-    this.speed = 150; // The speed of the projectile (adjust to your needs)
+    // this.boundingBox = new THREE.Box3().setFromObject(this.mesh);
+
+    // this.scene.add(this.mesh);
+
+    this.speed = 100; // The speed of the projectile (adjust to your needs)
   }
 
   update(deltaTime) {
     // Move the projectile in the direction it's facing
-
-    // Move the projectile in the direction it's facing
-    const velocity = this.direction.clone().multiplyScalar(this.speed);
-    this.mesh.position.add(velocity.multiplyScalar(deltaTime));
+    // const velocity = this.direction.clone().multiplyScalar(this.speed);
+    // this.mesh.position.add(velocity.multiplyScalar(deltaTime));
 
     // Update the age of the projectile
     this.age += deltaTime;

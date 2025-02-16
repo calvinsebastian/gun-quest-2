@@ -6,6 +6,9 @@ import { CollisionManager } from "./CollisionManager";
 import { View } from "./View";
 import { config } from "../variables/config";
 import { GameState } from "./GameState";
+import { enemies } from "../variables/enemies";
+import { generateUUID } from "../utility";
+import { roundRequirements } from "../variables/roundRequirements";
 
 export class Game {
   constructor() {
@@ -86,7 +89,7 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.controls.lock();
         this.player.lockedControls = true;
-        if (!this.backgroundMusic) this.registerMusic();
+        // if (!this.backgroundMusic) this.registerMusic();
       } else {
         console.log("unsuccessful click to start");
       }
@@ -110,6 +113,7 @@ export class Game {
     this.collisionManager = new CollisionManager(this.scene);
     this.player = new Player(this.camera, this.scene, this.collisionManager);
     this.enemies = [];
+    this.round = 0;
 
     this.animate = this.animate.bind(this);
     this.animate();
@@ -160,9 +164,36 @@ export class Game {
   }
 
   manageEnemies() {
-    if (this.enemies.length < 1) {
-      console.log("adding an enemy");
-      const enemy = new Enemy(this.scene, this.player, 3);
+    console.log("Current number of enemies:", this.enemies.length);
+
+    // Check if we need to spawn a new enemy (max enemies = this.round + 1)
+    const activeEnemies = this.enemies.filter((e) => !e.isDead); // Only count alive enemies
+    console.log("Active enemies: ", activeEnemies.length);
+
+    if (activeEnemies.length < this.round + 1) {
+      // Get random enemy configuration
+      const enemyConfig = {
+        ...enemies[this.round][
+          Math.floor(Math.random() * enemies[this.round].length)
+        ],
+        uuid: generateUUID(),
+      };
+
+      // Create a new enemy and pass the onDestroy callback
+      const enemy = new Enemy(this.scene, this.player, enemyConfig, (e) => {
+        e.isDead = true; // Mark as dead
+
+        // Find and remove the enemy from the enemies array
+        const index = this.enemies.findIndex((obj) => obj.uuid === e.uuid);
+        if (index !== -1) {
+          // Remove the enemy from the array
+          this.enemies.splice(index, 1);
+          this.player.enemiesKilled[this.player.weapon.name] += 1;
+          this.player.enemiesKilled.total += 1;
+        }
+      });
+
+      // Add the newly created enemy to the enemies array
       this.enemies.push(enemy);
     }
   }
@@ -183,14 +214,29 @@ export class Game {
     }
 
     if (this.player.lockedControls && this.state.current === "running") {
+      if (this.player.enemiesKilled.total > roundRequirements[this.round]) {
+        this.round += 1;
+      }
       this.manageEnemies();
 
       this.enemies.forEach((enemy) => {
         enemy.update(deltaTime);
 
         if (this.collisionManager.checkEnemyCollisions(enemy, this.player)) {
-          console.log("Enemy collided with player!");
+          console.log("Enemy collided with player!", enemy);
         }
+
+        this.player.weapon.projectiles.forEach((proj) => {
+          // Using raycast for projectile collision detection
+
+          if (
+            this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
+          ) {
+            console.log("You shot the enemy!");
+            enemy.takeDamage(this.player.weapon.damage); // Damage value from the projectile
+            proj.onDestroy(proj);
+          }
+        });
       });
 
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
