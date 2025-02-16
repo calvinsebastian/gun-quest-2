@@ -66,4 +66,8 @@ export class View {
       this.scene.add(this[light.label]);
     });
   }
+
+  update() {
+    console.log("updating");
+  }
 }

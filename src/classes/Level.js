@@ -108,6 +108,7 @@ export class Level {
   }
 
   update() {
+    console.log("updating");
     // Additional updates will go here
   }
 }

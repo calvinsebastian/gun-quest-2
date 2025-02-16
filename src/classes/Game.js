@@ -19,6 +19,19 @@ export class Game {
     this.scene = this.view.scene;
     this.camera = this.view.mainCamera;
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
+
+    // Get GPU info
+    const gl = this.renderer.getContext();
+    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    let graphicsCardInfo = {
+      gpu: debugInfo
+        ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+        : "Unknown GPU - your experience may be unreliable",
+      vendor: debugInfo
+        ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+        : "Unknown Vender - your experience may be unreliable",
+    };
+
     this.renderer.setSize(config.viewportSize[this.state.viewport]);
     document.body.appendChild(this.renderer.domElement);
 
@@ -36,11 +49,15 @@ export class Game {
     };
 
     this.loadingManager.onLoad = () => {
-      console.log("loadededed");
-      setTimeout(() => {
-        console.log("Loading complete!");
-        this.state.current = "running";
-      }, 4000);
+      console.log("Loading complete!");
+      const loadingProgressElement =
+        this.loadingScreen.querySelector(".progress");
+      loadingProgressElement.innerHTML = ``;
+      loadingProgressElement.innerHTML = `<div><h1>Click the screen to start</h1><p class="registration">Registering Hardware . . .</p>
+      <p class="gpu-data">GPU: ${graphicsCardInfo.gpu}</p>
+      <p class="gpu-data">Vendor: ${graphicsCardInfo.vendor}</p>
+      </div> `;
+      this.state.current = "running";
     };
 
     this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
@@ -68,9 +85,11 @@ export class Game {
     //////////////////////////////////////////////////////////////////
 
     document.body.addEventListener("click", () => {
-      console.log("clicking body");
       if (this.state.current !== "loading") {
-        console.log("clicked body");
+        console.log("clicked to start");
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.hideLoadingScreen();
         this.controls.lock();
         this.player.lockedControls = true;
@@ -143,8 +162,6 @@ export class Game {
 
     requestAnimationFrame(this.animate);
 
-    console.log(this.player.lockedControls, this.state.current);
-
     if (this.player.lockedControls && this.state.current === "running") {
       this.manageEnemies();
 
@@ -157,8 +174,8 @@ export class Game {
       });
 
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
-
       // Update light position based on player direction
+      this.view.update(deltaTime);
       this.renderer.render(this.scene, this.camera);
     }
   }
