@@ -12,8 +12,7 @@ export class Player {
     this.acceleration = 0.1; // Acceleration for smooth movement
     this.gravity = 0.2; // Gravity force
     this.isOnGround = false;
-
-    this.lockedControls = true; // Prevent player input
+    this.lockedControls = false; // Prevent player input
 
     this.cameraHeight = 1.6; // Camera height above ground
     this.playerHeight = 1.8; // Full height of player (for collision detection)

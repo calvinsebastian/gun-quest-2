@@ -1,30 +1,26 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Player } from "./Player";
-import { Level } from "./Level";
 import { Enemy } from "./Enemy";
 import { CollisionManager } from "./CollisionManager";
+import { View } from "./View";
+import { config } from "../variables/config";
+import { GameState } from "./GameState";
 
 export class Game {
   constructor() {
-    //////////////////////////////////////////////////////////////////
-    //  ----------------------  SCENE SETUP  ---------------------  //
-    //////////////////////////////////////////////////////////////////
-
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
-      50,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      100
-    );
-    this.camera.position.set(25, 25, 25);
-    this.camera.lookAt(0, 5, 0);
+    this.state = new GameState({
+      current: "loading",
+      view: { name: "test" },
+      config: { viewport: "window" },
+    });
+    this.loadingManager = new THREE.LoadingManager();
+    this.view = new View(this.state, this.loadingManager);
+    this.scene = this.view.scene;
+    this.camera = this.view.mainCamera;
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(config.viewportSize[this.state.viewport]);
     document.body.appendChild(this.renderer.domElement);
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-    this.scene.add(ambientLight);
 
     // Add loading screen overlay
     this.loadingScreen = this.createLoadingScreen();
@@ -34,34 +30,24 @@ export class Game {
     //  --------------------- LOADING MANAGER  -------------------  //
     //////////////////////////////////////////////////////////////////
 
-    this.loadingManager = new THREE.LoadingManager();
-
     this.loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+      this.state.current = "loading";
       console.log(`Started loading: ${url}`);
     };
 
     this.loadingManager.onLoad = () => {
+      console.log("loadededed");
       setTimeout(() => {
         console.log("Loading complete!");
-        this.loadingScreen.innerHTML = ``;
-        this.loadingScreen.innerHTML = `<button id="start-button">Start</button>`;
-        const startButton = document.getElementById("start-button");
-
-        startButton.addEventListener("click", () => {
-          if (!this.isLoading) {
-            console.log("clicked");
-            this.hideLoadingScreen();
-            this.controls.lock();
-            this.enablePlayerInput();
-            this.player.lockedControls = false;
-          }
-        });
-        this.isLoading = false;
+        this.state.current = "running";
       }, 4000);
     };
 
     this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
       const progress = (itemsLoaded / itemsTotal) * 100;
+
+      console.log("progressing", progress);
+
       this.loadingScreen.querySelector(
         ".progress"
       ).textContent = `Loading... ${Math.round(progress)}%`;
@@ -82,11 +68,12 @@ export class Game {
     //////////////////////////////////////////////////////////////////
 
     document.body.addEventListener("click", () => {
-      if (!this.player.lockedControls) {
+      console.log("clicking body");
+      if (this.state.current !== "loading") {
+        console.log("clicked body");
         this.hideLoadingScreen();
         this.controls.lock();
-        this.enablePlayerInput();
-        this.player.lockedControls = false;
+        this.player.lockedControls = true;
       }
     });
 
@@ -99,10 +86,8 @@ export class Game {
       this.renderer.domElement
     );
     this.player = new Player(this.camera, this.scene, this.collisionManager);
-    this.level = new Level(this.scene, this.loadingManager);
     this.enemies = [];
 
-    this.isLoading = true; // Set loading flag to true while assets load
     this.animate = this.animate.bind(this);
     this.animate();
 
@@ -142,11 +127,6 @@ export class Game {
     return loadingScreen;
   }
 
-  // Enable player input
-  enablePlayerInput() {
-    this.isLoading = false; // Disable loading flag
-  }
-
   manageEnemies() {
     if (this.enemies.length < 1) {
       console.log("adding an enemy");
@@ -163,7 +143,9 @@ export class Game {
 
     requestAnimationFrame(this.animate);
 
-    if (!this.isLoading && !this.player.lockedControls) {
+    console.log(this.player.lockedControls, this.state.current);
+
+    if (this.player.lockedControls && this.state.current === "running") {
       this.manageEnemies();
 
       this.enemies.forEach((enemy) => {
@@ -175,7 +157,6 @@ export class Game {
       });
 
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
-      this.level.update(deltaTime); // Pass deltaTime to the level's update function
 
       // Update light position based on player direction
       this.renderer.render(this.scene, this.camera);

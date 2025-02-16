@@ -16,7 +16,7 @@ export class Weapon {
 
     // Listen for mouse click to shoot
     window.addEventListener("mousedown", () => {
-      if (!this.player.lockedControls) this.shoot();
+      if (this.player.lockedControls) this.shoot();
     });
   }
 
