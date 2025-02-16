@@ -3,18 +3,19 @@ import * as THREE from "three";
 export class CollisionManager {
   constructor(scene) {
     this.scene = scene;
-    this.wallObjects = this.scene.children.filter(
-      (object) => object.isWall === true
-    ); // Static objects (walls) only need to be checked once
+
+    console.log(this.scene);
     this.raycaster = new THREE.Raycaster(); // Raycaster for projectile collisions
   }
 
   // Check for collisions between a player and static objects (optimized for walls)
   checkStaticCollisions(player) {
-    player.boundingBox.setFromObject(player.playerMesh);
-
+    this.wallObjects = this.scene.children.filter(
+      (object) => object.isWall === true
+    );
     for (const object of this.wallObjects) {
       if (object instanceof THREE.Mesh) {
+        console.log(object);
         const objectBoundingBox = new THREE.Box3().setFromObject(object);
         if (player.boundingBox.intersectsBox(objectBoundingBox)) {
           // Collision detected, return true

@@ -101,7 +101,10 @@ export class Level {
 
       if (plane.rotation) mesh.rotation.set(...Object.values(plane.rotation));
       mesh.position.set(...Object.values(plane.position));
-      if (plane.type === "wall") mesh.isWall = true;
+
+      if (plane.type === "wall") {
+        mesh.isWall = true;
+      }
       this.scene.add(mesh);
     });
   }
