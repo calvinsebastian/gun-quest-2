@@ -53,17 +53,17 @@ export class Game {
       const loadingProgressElement =
         this.loadingScreen.querySelector(".progress");
       loadingProgressElement.innerHTML = ``;
-      loadingProgressElement.innerHTML = `<div><h1>Click the screen to start</h1><p class="registration">Registering Hardware . . .</p>
+      loadingProgressElement.innerHTML = `<div><h1 class="click-to-start">Click to Register</h1>
+       <p class="registration">This may take few moments depending on your hardware</p>
       <p class="gpu-data">GPU: ${graphicsCardInfo.gpu}</p>
       <p class="gpu-data">Vendor: ${graphicsCardInfo.vendor}</p>
       </div> `;
+
       this.state.current = "running";
     };
 
     this.loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
       const progress = (itemsLoaded / itemsTotal) * 100;
-
-      console.log("progressing", progress);
 
       this.loadingScreen.querySelector(
         ".progress"
@@ -75,25 +75,28 @@ export class Game {
     };
 
     //////////////////////////////////////////////////////////////////
-    //  -------------------  COLLISION MANAGER  ------------------  //
-    //////////////////////////////////////////////////////////////////
-
-    this.collisionManager = new CollisionManager(this.scene);
-
-    //////////////////////////////////////////////////////////////////
     //  --------------------  EVENT LISTENERS  -------------------  //
     //////////////////////////////////////////////////////////////////
 
+    // Click to lock controls
     document.body.addEventListener("click", () => {
       if (this.state.current !== "loading") {
-        console.log("clicked to start");
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.hideLoadingScreen();
         this.controls.lock();
         this.player.lockedControls = true;
+        if (!this.backgroundMusic) this.registerMusic();
+      } else {
+        console.log("unsuccessful click to start");
       }
+    });
+
+    // Window resize handling
+    window.addEventListener("resize", () => {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
     //////////////////////////////////////////////////////////////////
@@ -104,22 +107,32 @@ export class Game {
       this.camera,
       this.renderer.domElement
     );
+    this.collisionManager = new CollisionManager(this.scene);
     this.player = new Player(this.camera, this.scene, this.collisionManager);
     this.enemies = [];
 
     this.animate = this.animate.bind(this);
     this.animate();
 
-    // Window resize handling
-    window.addEventListener("resize", () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    this.backgroundMusic = null;
   }
 
-  hideLoadingScreen() {
-    this.loadingScreen.style.display = "none"; // Hide loading screen
+  async registerMusic() {
+    function loadAudio(src) {
+      return new Promise((resolve, reject) => {
+        const audio = new Audio(src);
+        audio.oncanplaythrough = () => resolve(audio);
+        audio.onerror = () =>
+          reject(new Error(`Failed to load audio at ${src}`));
+      });
+    }
+
+    [this.backgroundMusic] = await Promise.all([
+      loadAudio("/audio/assets/music/cryptaGlyph3.mp3"),
+    ]);
+    this.backgroundMusic.play().catch((error) => {
+      console.error("Audio playback failed:", error);
+    });
   }
 
   // Create the loading screen
@@ -161,6 +174,13 @@ export class Game {
     this.lastTime = currentTime; // Store the current time for the next frame
 
     requestAnimationFrame(this.animate);
+
+    if (!this.controls.isLocked) {
+      this.player.lockedControls = false;
+    } else if (this.loadingScreen.style.display === "flex") {
+      this.loadingScreen.style.display = "none";
+      this.renderer.render(this.scene, this.camera);
+    }
 
     if (this.player.lockedControls && this.state.current === "running") {
       this.manageEnemies();

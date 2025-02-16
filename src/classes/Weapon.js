@@ -1,9 +1,6 @@
 import * as THREE from "three";
 import { Projectile } from "./Projectile";
 import { playSound } from "../audio/soundManager.js";
-import gunSounds from "../audio/assets/gunshot1.wav";
-
-console.log(gunSounds);
 
 export class Weapon {
   constructor(scene, player) {
@@ -68,7 +65,7 @@ export class Weapon {
   }
 
   shoot() {
-    playSound("/audio/assets/gunshot1.wav", 0.5);
+    playSound("/audio/assets/effects/gunshot1.wav", 0.5);
     // Get the position and direction of the shot
     const direction = this.player.camera.getWorldDirection(new THREE.Vector3());
     const position = this.weaponMesh.position

@@ -37,7 +37,6 @@ export class Level {
     // Load floor textures
     for (const [k, v] of Object.entries(this.texturePaths)) {
       for (const [key, path] of Object.entries(v.paths)) {
-        console.log(key, path);
         texturePromises.push(
           new Promise((resolve, reject) => {
             this.textureLoader.load(
