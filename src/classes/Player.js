@@ -8,7 +8,7 @@ export class Player {
     this.scene = scene;
     this.collisionManager = collisionManager;
     this.velocity = new THREE.Vector3();
-    this.speed = 0.1;
+    this.stats = { speed: 0.1, currentHealth: 50, maxHealth: 50 };
     this.acceleration = 0.1; // Acceleration for smooth movement
     this.gravity = 0.2; // Gravity force
     this.isOnGround = false;
@@ -106,6 +106,21 @@ export class Player {
     }
   }
 
+  showHitMarker() {
+    console.log("Display hit marker");
+
+    // Get the hit marker element
+    const hitMarker = document.getElementById("hitMarker");
+
+    // Show the hit marker for a short period (e.g., 0.2 seconds)
+    hitMarker.style.display = "block";
+
+    // Hide the hit marker after a short delay
+    setTimeout(() => {
+      hitMarker.style.display = "none";
+    }, 200); // 200 milliseconds for the marker to stay visible
+  }
+
   update(deltaTime) {
     const prevPosition = this.camera.position.clone();
 
@@ -128,13 +143,13 @@ export class Player {
     const targetVelocity = new THREE.Vector3(0, 0, 0);
 
     if (this.moveForward)
-      targetVelocity.add(cameraDirection.multiplyScalar(this.speed));
+      targetVelocity.add(cameraDirection.multiplyScalar(this.stats.speed));
     if (this.moveBackward)
-      targetVelocity.add(cameraDirection.multiplyScalar(-this.speed));
+      targetVelocity.add(cameraDirection.multiplyScalar(-this.stats.speed));
     if (this.moveLeft)
-      targetVelocity.add(cameraRight.multiplyScalar(-this.speed));
+      targetVelocity.add(cameraRight.multiplyScalar(-this.stats.speed));
     if (this.moveRight)
-      targetVelocity.add(cameraRight.multiplyScalar(this.speed));
+      targetVelocity.add(cameraRight.multiplyScalar(this.stats.speed));
 
     // Smooth out velocity
     this.velocity.x += (targetVelocity.x - this.velocity.x) * this.acceleration;
@@ -144,40 +159,56 @@ export class Player {
       this.velocity.y -= this.gravity;
     }
 
-    // Check for static collisions and get the normal direction if a collision occurs
-    const collisionNormal = this.collisionManager.checkStaticCollisions(this);
+    // Store original velocity to test each direction independently
+    let originalVelocity = this.velocity.clone();
 
-    if (collisionNormal) {
-      const dotProduct = this.velocity.dot(collisionNormal);
-
+    // Check for collisions and restrict movement in case of a collision
+    let collisionNormalX = this.collisionManager.checkStaticCollisions(
+      this,
+      "x"
+    );
+    if (collisionNormalX) {
+      const dotProduct = this.velocity.dot(collisionNormalX);
       if (dotProduct < 0) {
-        // If moving towards the wall, stop movement along the normal (perpendicular to the wall)
-        const velocityAlongNormal = collisionNormal
+        const velocityAlongNormal = collisionNormalX
           .clone()
           .multiplyScalar(dotProduct);
-        this.velocity.sub(velocityAlongNormal); // Stop movement into the wall
-
-        // Allow sliding along the wall (keep movement parallel to the wall)
-        const parallelVelocity = this.velocity.clone();
-        parallelVelocity.y = 0; // Ensure no vertical movement
-        this.camera.position.add(parallelVelocity); // Apply movement along the wall
-        this.playerMesh.position.copy(this.camera.position);
-        this.boundingBox.setFromObject(this.playerMesh);
-
-        // Optional: Apply small sliding friction to slow the player down
-        this.velocity.multiplyScalar(0.95); // Adjust sliding friction as needed
-      } else {
-        // If not moving towards the wall (moving away), update normally
-        this.camera.position.add(this.velocity);
-        this.playerMesh.position.copy(this.camera.position);
-        this.boundingBox.setFromObject(this.playerMesh);
+        this.velocity.sub(velocityAlongNormal); // Stop movement along X axis
       }
-    } else {
-      // No collision, normal movement
-      this.camera.position.add(this.velocity);
-      this.playerMesh.position.copy(this.camera.position);
-      this.boundingBox.setFromObject(this.playerMesh);
     }
+
+    let collisionNormalZ = this.collisionManager.checkStaticCollisions(
+      this,
+      "z"
+    );
+    if (collisionNormalZ) {
+      const dotProduct = this.velocity.dot(collisionNormalZ);
+      if (dotProduct < 0) {
+        const velocityAlongNormal = collisionNormalZ
+          .clone()
+          .multiplyScalar(dotProduct);
+        this.velocity.sub(velocityAlongNormal); // Stop movement along Z axis
+      }
+    }
+
+    let collisionNormalY = this.collisionManager.checkStaticCollisions(
+      this,
+      "y"
+    );
+    if (collisionNormalY) {
+      const dotProduct = this.velocity.dot(collisionNormalY);
+      if (dotProduct < 0) {
+        const velocityAlongNormal = collisionNormalY
+          .clone()
+          .multiplyScalar(dotProduct);
+        this.velocity.sub(velocityAlongNormal); // Stop movement along Y axis (vertical)
+      }
+    }
+
+    // After collision checks, allow movement only if no collisions
+    this.camera.position.add(this.velocity);
+    this.playerMesh.position.copy(this.camera.position);
+    this.boundingBox.setFromObject(this.playerMesh);
 
     // Update other game elements (flashlight, weapon, etc.)
     this.flashlight.update(this.camera);

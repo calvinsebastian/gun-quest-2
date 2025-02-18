@@ -3,8 +3,6 @@ import { playSound } from "../audio/soundManager";
 
 export class Enemy {
   constructor(scene, player, enemyConfig, onDestroy) {
-    console.log("I am aliiiiiiivvee!", enemyConfig);
-
     // Assign the uuid and other properties
     this.uuid = enemyConfig.uuid;
     this.scene = scene;
@@ -14,6 +12,8 @@ export class Enemy {
     // Initialize the stats, including health
     this.stats = {
       currentHealth: enemyConfig.stats?.currentHealth || 100, // Default to 100 if not provided
+      maxHealth: enemyConfig.stats?.maxHealth || 100,
+      damage: enemyConfig.stats?.damage || { melee: { value: 10 } },
       speed: enemyConfig.stats?.speed || 1, // Default speed if not provided
     };
 
@@ -27,16 +27,25 @@ export class Enemy {
     });
     this.mesh = new THREE.Mesh(geometry, material);
 
-    // Set enemy's starting position
-    this.mesh.position.set(20, 1, 30); // Start at some position
+    // Set enemy's starting position 20, 1, 30
+    this.mesh.position.set(
+      enemyConfig.position.x,
+      enemyConfig.position.y,
+      enemyConfig.position.z
+    ); // Start at some position
     this.scene.add(this.mesh);
 
     // Create a bounding box for the enemy
     this.boundingBox = new THREE.Box3().setFromObject(this.mesh);
+
+    // Initialize velocity (initially 0, no movement)
+    this.velocity = new THREE.Vector3(0, 0, 0);
   }
 
-  // Method to update the enemy's position towards the player
+  // Method to update the enemy's position and velocity towards the player
   update(deltaTime) {
+    console.log(this.mesh.position); // Debugging the position to track movement
+
     // If the enemy's health is <= 0, destroy it
     if (this.stats.currentHealth <= 0) {
       this.scene.remove(this.mesh);
@@ -57,10 +66,11 @@ export class Enemy {
     direction.y = 0; // Ignore vertical movement (for flat movement on the ground)
     direction.normalize(); // Normalize the direction vector
 
-    // Move the enemy towards the player
-    this.mesh.position.add(
-      direction.multiplyScalar(this.stats.speed * deltaTime)
-    );
+    // Reset velocity to avoid accumulating it and make movement controlled
+    this.velocity = direction.multiplyScalar(this.stats.speed); // Calculate velocity towards the player
+
+    // Move the enemy based on velocity
+    this.mesh.position.add(this.velocity.multiplyScalar(deltaTime)); // Apply movement based on velocity
 
     // Update the bounding box to match the enemy's new position
     this.boundingBox.setFromObject(this.mesh);
@@ -77,7 +87,12 @@ export class Enemy {
       `Enemy ${this.uuid} took ${amount} damage. Current health: ${this.stats.currentHealth}`
     );
 
-    playSound("/audio/assets/effects/hit.wav", 0.5);
+    playSound(
+      this.stats.currentHealth > 0
+        ? "/audio/assets/effects/hit.wav"
+        : "/audio/assets/effects/death.wav",
+      0.5
+    );
     if (this.stats.currentHealth <= 0) {
       console.log(`Enemy ${this.uuid} is dead.`);
       this.scene.remove(this.mesh);

@@ -7,7 +7,7 @@ import { View } from "./View";
 import { config } from "../variables/config";
 import { GameState } from "./GameState";
 import { enemies } from "../variables/enemies";
-import { generateUUID } from "../utility";
+import { generateEnemyPosition, generateUUID } from "../utility";
 import { roundRequirements } from "../variables/roundRequirements";
 
 export class Game {
@@ -78,7 +78,7 @@ export class Game {
 
     this.loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
       this.state.current = "loading";
-      console.log(`Started loading: ${url}`);
+      // console.log(`Started loading: ${url}`);
     };
 
     this.loadingManager.onLoad = () => {
@@ -193,6 +193,7 @@ export class Game {
           Math.floor(Math.random() * enemies[this.round].length)
         ],
         uuid: generateUUID(),
+        position: generateEnemyPosition(),
       };
 
       // Create a new enemy and pass the onDestroy callback
@@ -240,7 +241,7 @@ export class Game {
         enemy.update(deltaTime);
 
         if (this.collisionManager.checkEnemyCollisions(enemy, this.player)) {
-          console.log("Enemy collided with player!", enemy);
+          this.collisionManager.handleEnemyPlayerCollision(enemy, this.player);
         }
 
         const hitEnemies = [];
@@ -261,6 +262,7 @@ export class Game {
         hitEnemies.forEach(({ enemy, proj }) => {
           enemy.takeDamage(this.player.weapon.damage);
           proj.onDestroy(proj);
+          this.player.showHitMarker();
         });
 
         // this.player.weapon.projectiles.forEach((proj) => {

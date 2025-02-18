@@ -96,8 +96,6 @@ export class Level {
       // Build Mesh
       const mesh = new THREE.Mesh(geometry, material);
 
-      console.log(mesh);
-
       // Set rotation and position of planes
       if (plane.rotation) mesh.rotation.set(...Object.values(plane.rotation));
       mesh.position.set(...Object.values(plane.position));
