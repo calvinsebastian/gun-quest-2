@@ -3,10 +3,10 @@ import * as THREE from "three";
 export class Flashlight {
   constructor(scene) {
     this.scene = scene;
-    this.lightSource = new THREE.SpotLight(0xffffff, 2); // Directional light
+    this.lightSource = new THREE.SpotLight(0xffffff, 3); // Directional light
     this.lightSource.position.set(0, 1.2, 0); // Initial position of the light
     this.lightSource.penumbra = 1;
-    this.lightSource.distance = 10;
+    this.lightSource.distance = 20;
     this.lightSource.angle = Math.PI / 5;
     this.lightSource.castShadow = true; // Enable shadows if necessary
     this.scene.add(this.lightSource);

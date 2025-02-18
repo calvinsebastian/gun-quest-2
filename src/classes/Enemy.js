@@ -44,7 +44,7 @@ export class Enemy {
 
   // Method to update the enemy's position and velocity towards the player
   update(deltaTime) {
-    console.log(this.mesh.position); // Debugging the position to track movement
+    // console.log(this.mesh.position); // Debugging the position to track movement
 
     // If the enemy's health is <= 0, destroy it
     if (this.stats.currentHealth <= 0) {

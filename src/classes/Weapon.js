@@ -73,38 +73,36 @@ export class Weapon {
     const position = this.weaponMesh.position
       .clone()
       .add(direction.multiplyScalar(0.5)); // Fire from the barrel
-    const flash = this.weaponMesh.position
+    const flash = this.player.camera.position
       .clone()
       .add(direction.multiplyScalar(1)); // Fire from the barrel
 
+    // Adjust the position to be 5 units in front of the muzzle
+    const adjustedPosition = flash.add(direction.clone().multiplyScalar(3));
+
     // Create a new projectile and add it to the scene
-    const projectile = new Projectile(
-      this.scene,
-      position,
-      direction,
-      (projectile) => {
-        // Remove the projectile from the array when it's destroyed
-        const index = this.projectiles.indexOf(projectile);
-        if (index !== -1) {
-          this.projectiles.splice(index, 1);
-        }
+    const projectile = new Projectile(this.scene, position, direction, (p) => {
+      // Remove the projectile from the array when it's destroyed
+      const index = this.projectiles.indexOf(p);
+      if (index !== -1) {
+        this.projectiles.splice(index, 1);
       }
-    );
+    });
 
     this.projectiles.push(projectile);
 
     // Create the muzzle flash light
-    const muzzleFlash = new THREE.PointLight(0xffffff, 10, 10, 2); // White light, intensity of 10, distance of 5, and decay of 2
-    muzzleFlash.distance = 10;
+    const muzzleFlash = new THREE.PointLight(0xffffaa, 2, 10, 2); // White light, intensity of 10, distance of 5, and decay of 2
+    muzzleFlash.distance = 20;
     muzzleFlash.angle = Math.PI / 5;
     muzzleFlash.castShadow = true; // Enable shadows if necessary
-    muzzleFlash.position.copy(flash); // Position it at the gun's muzzle (weapon barrel)
+    muzzleFlash.position.copy(adjustedPosition); // Position it at the gun's muzzle (weapon barrel)
     this.scene.add(muzzleFlash);
 
     // Animate the muzzle flash to fade out quickly
     setTimeout(() => {
       this.scene.remove(muzzleFlash); // Remove the muzzle flash from the scene after 0.1 seconds
-    }, 20); // Fade out after 100ms
+    }, 15); // Fade out after 100ms
   }
 
   // Update the weapon's position based on the camera

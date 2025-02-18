@@ -119,7 +119,12 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.controls.lock();
         this.player.lockedControls = true;
-        if (!this.backgroundMusic) this.registerMusic();
+        const aimingReticle = document.getElementById("aimingReticle");
+
+        // Show the hit marker for a short period (e.g., 0.2 seconds)
+        if (aimingReticle.style.display === "none")
+          aimingReticle.style.display = "block";
+        // if (!this.backgroundMusic) this.registerMusic();
       } else {
         console.log("unsuccessful click to start");
       }
@@ -186,11 +191,14 @@ export class Game {
   }
 
   manageEnemies() {
-    console.log("Current number of enemies:", this.enemies.length);
-
     // Check if we need to spawn a new enemy (max enemies = this.round + 1)
     const activeEnemies = this.enemies.filter((e) => !e.isDead); // Only count alive enemies
-    console.log("Active enemies: ", activeEnemies.length);
+    console.log(
+      "Active enemies: ",
+      activeEnemies.length,
+      " / ",
+      this.enemies.length
+    );
 
     if (activeEnemies.length < this.round + 1) {
       // Get random enemy configuration

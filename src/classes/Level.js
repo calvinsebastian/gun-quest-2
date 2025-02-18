@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { generateUUID, getMapPosition } from "../utility";
 
 export class Level {
   constructor(scene, loadingManager, levelConfig) {
@@ -16,7 +17,7 @@ export class Level {
     this.loadTextures()
       .then(() => {
         // Textures loaded, now populate basic planes
-        this.renderPlanes(this.config.staticObjects.planes);
+        this.renderObjects(this.config.staticObjects.objects);
       })
       .catch((error) => {
         console.error("Error loading textures:", error);
@@ -69,13 +70,30 @@ export class Level {
     texture.repeat.set(repeatX, repeatY);
   }
 
-  renderPlanes(planes) {
-    planes.forEach((plane) => {
-      // Build Material
+  renderObjects(objectGroups) {
+    Object.entries(objectGroups).forEach(([k, v]) => {
+      switch (k) {
+        case "perimeters":
+          this.renderPerimeters(v);
+          break;
 
+        case "default_walls":
+          this.renderDefaultWalls(v);
+          break;
+
+        default:
+          break;
+      }
+    });
+  }
+
+  renderPerimeters(perimeters) {
+    perimeters.forEach((perimeter) => {
+      // Build Material
       const { albedo, normal, roughness, metallic, ao, height } = {
-        ...this.textures[plane.texturePack],
+        ...this.textures[perimeter.texturePack],
       };
+
       const material = new THREE.MeshStandardMaterial({
         map: albedo,
         normalMap: normal,
@@ -87,27 +105,75 @@ export class Level {
         side: THREE.FrontSide,
       });
 
-      // Build Geometry
-
-      const geometry = new THREE[plane.geometryType](
-        ...Object.values({ ...plane.dimensions })
+      // Build geometry and set rotation / position of perimeters
+      const geometry = new THREE[perimeter.geometryType](
+        ...Object.values({ ...perimeter.dimensions })
       );
-
-      // Build Mesh
       const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...Object.values(perimeter.position));
+      if (perimeter.rotation)
+        mesh.rotation.set(...Object.values(perimeter.rotation));
 
-      // Set rotation and position of planes
-      if (plane.rotation) mesh.rotation.set(...Object.values(plane.rotation));
-      mesh.position.set(...Object.values(plane.position));
-
-      // Seperate
-      if (plane.collision) {
-        Object.keys(plane.collision).forEach((subject) => {
+      // Manage collision rules
+      if (perimeter.collision) {
+        Object.keys(perimeter.collision).forEach((subject) => {
           if (subject) {
             mesh.collision = { ...mesh.collision, [subject]: true };
           }
         });
       }
+
+      this.scene.add(mesh);
+    });
+  }
+
+  renderDefaultWalls(walls) {
+    walls.forEach((wall, i) => {
+      const wallConfig = {
+        id: `uuid_wall_${generateUUID()}`,
+        wallTexturePack: "wall001",
+        geometryType: "BoxGeometry",
+        size: { x: 2.4, y: 2.4, z: 2.4 },
+        collision: {
+          Player: true,
+          Enemy: true,
+        },
+      };
+
+      const { albedo, normal, roughness, metallic, ao, height } = {
+        ...this.textures[wallConfig.wallTexturePack],
+      };
+
+      const material = new THREE.MeshStandardMaterial({
+        map: albedo,
+        normalMap: normal,
+        roughnessMap: roughness,
+        metalnessMap: metallic,
+        aoMap: ao,
+        displacementMap: height,
+        displacementScale: 0,
+        side: THREE.FrontSide,
+      });
+
+      const geometry = new THREE[wallConfig.geometryType](
+        ...Object.values({
+          x: wallConfig.size.x,
+          y: wallConfig.size.y,
+          z: wallConfig.size.z,
+        })
+      );
+      const newPlanePosition = getMapPosition(wall[0], wall[1]);
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...Object.values(newPlanePosition));
+      if (wallConfig.collision) {
+        Object.keys(wallConfig.collision).forEach((subject) => {
+          if (subject) {
+            mesh.collision = { ...mesh.collision, [subject]: true };
+          }
+        });
+      }
+
       this.scene.add(mesh);
     });
   }

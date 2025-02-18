@@ -145,7 +145,7 @@ export class CollisionManager {
       // Reflect player velocity
       const reflectionPlayer = direction
         .clone()
-        .multiplyScalar(5 * velocityAlongNormal);
+        .multiplyScalar(1 * velocityAlongNormal);
       player.velocity.sub(reflectionPlayer); // Adjust player velocity
 
       // Reflect enemy velocity

@@ -25,3 +25,23 @@ export function generateEnemyPosition() {
   // Return the position as an object
   return { x: x, y: y, z: z };
 }
+
+export function getMapPosition(x, y) {
+  // Define the scale factor for the transformation
+  const scale = 2.4;
+
+  // Map the x and y values to the desired range
+  const xPosition = (x - 0) * scale - 44.4;
+  const yPosition = (y - 0) * scale - 44.4;
+
+  // Ensure that the maximum values do not exceed the target range
+  const maxPosition = 44.4;
+  const minPosition = -44.4;
+
+  // Clamp the values to the min/max range to prevent overflow
+  const clampedX = Math.max(minPosition, Math.min(xPosition, maxPosition));
+  const clampedY = Math.max(minPosition, Math.min(yPosition, maxPosition));
+
+  // Return the translated position
+  return { x: clampedX, y: 1.2, z: clampedY }; // Assuming z is always 1
+}

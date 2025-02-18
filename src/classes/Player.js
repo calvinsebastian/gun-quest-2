@@ -107,8 +107,6 @@ export class Player {
   }
 
   showHitMarker() {
-    console.log("Display hit marker");
-
     // Get the hit marker element
     const hitMarker = document.getElementById("hitMarker");
 
@@ -122,8 +120,6 @@ export class Player {
   }
 
   update(deltaTime) {
-    const prevPosition = this.camera.position.clone();
-
     // Check for ground detection
     this.checkGround();
 
