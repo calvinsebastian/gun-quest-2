@@ -1,10 +1,16 @@
 export default {
-  root: `src/`,
-  publicDir: `../static/`,
   base: `./`,
+  build: {
+    minify: "esbuild", // 🔹 Use ESBuild minifier
+    esbuild: {
+      keepNames: true, // 🔹 Preserve class names
+    },
+  },
+  publicDir: `../static/`,
+  root: `src/`,
   server: {
-    host: "0.0.0.0", // Allow access from other devices in the same network
-    port: 3000, // You can choose a custom port if you prefer
-    open: true, // Optionally open the browser when the server starts
+    host: "0.0.0.0",
+    port: 3000,
+    open: true,
   },
 };

@@ -44,8 +44,6 @@ export class Enemy {
 
   // Method to update the enemy's position and velocity towards the player
   update(deltaTime) {
-    // console.log(this.mesh.position); // Debugging the position to track movement
-
     // If the enemy's health is <= 0, destroy it
     if (this.stats.currentHealth <= 0) {
       this.scene.remove(this.mesh);
@@ -89,8 +87,8 @@ export class Enemy {
 
     playSound(
       this.stats.currentHealth > 0
-        ? "/audio/assets/effects/hit.wav"
-        : "/audio/assets/effects/death.wav",
+        ? "/assets/audio/effects/hit.wav"
+        : "/assets/audio/effects/death.wav",
       0.5
     );
     if (this.stats.currentHealth <= 0) {

@@ -67,7 +67,7 @@ export class Weapon {
   }
 
   shoot() {
-    playSound("/audio/assets/effects/gunshot1.wav", 0.5);
+    playSound("/assets/audio/effects/gunshot1.wav", 0.5);
     // Get the position and direction of the shot
     const direction = this.player.camera.getWorldDirection(new THREE.Vector3());
     const position = this.weaponMesh.position

@@ -8,7 +8,8 @@ export class CollisionManager {
 
   // Check for collisions between a player and static objects (optimized for walls)
   checkStaticCollisions(subject, axis = null) {
-    const classInstance = subject.constructor.name;
+    const classInstance = subject.className;
+
     this.collisionObjects = this.scene.children.filter((object) => {
       if (object.collision) {
         return object.collision[classInstance];
@@ -120,47 +121,28 @@ export class CollisionManager {
     // Adjust player health
     const reducedPlayerHealth =
       player.stats.currentHealth - enemy.stats.damage.melee.value;
-    player.stats.currentHealth =
-      reducedPlayerHealth > 0 ? reducedPlayerHealth : 0;
+    player.stats.currentHealth = Math.max(reducedPlayerHealth, 0);
 
-    console.log("Player health : ", player.stats.currentHealth);
-
-    // Get the direction vector from the player to the enemy
+    // Get the direction vector from the enemy to the player
     const direction = new THREE.Vector3().subVectors(
       player.camera.position,
       enemy.mesh.position
     );
-    direction.normalize(); // Normalize to get the unit vector
+    direction.normalize();
 
     // Calculate the relative velocity between the player and enemy
     const playerVelocity = player.velocity.clone();
-    const enemyVelocity = enemy.velocity.clone(); // Assuming enemy has a velocity property
+    const enemyVelocity = enemy.velocity.clone();
 
-    // Dot product to find how much the player and enemy are moving towards each other
     const relativeVelocity = playerVelocity.clone().sub(enemyVelocity);
     const velocityAlongNormal = relativeVelocity.dot(direction);
 
-    // If they're moving towards each other (dot product < 0), we need to reflect their velocities
     if (velocityAlongNormal < 0) {
-      // Reflect player velocity
-      const reflectionPlayer = direction
-        .clone()
-        .multiplyScalar(1 * velocityAlongNormal);
-      player.velocity.sub(reflectionPlayer); // Adjust player velocity
+      // Apply a force to the player away from the enemy, but limit it
+      const pushStrength = 0.2; // Reduce this value to prevent extreme knockback
+      const pushForce = direction.clone().multiplyScalar(pushStrength);
 
-      // Reflect enemy velocity
-      const reflectionEnemy = direction
-        .clone()
-        .multiplyScalar(-5 * velocityAlongNormal);
-      enemy.velocity.sub(reflectionEnemy); // Adjust enemy velocity
-
-      // Adjust their positions to avoid overlap
-      const overlapDistance =
-        player.boundingBox.getSize(new THREE.Vector3()).length() +
-        enemy.boundingBox.getSize(new THREE.Vector3()).length();
-      const correction = direction.clone().multiplyScalar(overlapDistance);
-      player.camera.position.add(correction); // Move player
-      enemy.mesh.position.sub(correction); // Move enemy
+      player.velocity.add(pushForce); // Modify velocity instead of position directly
     }
   }
 }

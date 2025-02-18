@@ -87,7 +87,7 @@ export class Game {
         this.loadingScreen.querySelector(".progress");
       loadingProgressElement.innerHTML = ``;
       loadingProgressElement.innerHTML = `<div><h1 class="click-to-start">Click to Register</h1>
-       <p class="registration">This may take few moments depending on your hardware</p>
+       <p class="registration">This may take a few moments depending on your hardware</p>
       <p class="gpu-data">GPU: ${this.graphicsCardInfo.gpu}</p>
       <p class="gpu-data">Vendor: ${this.graphicsCardInfo.vendor}</p>
       </div> `;
@@ -124,7 +124,9 @@ export class Game {
         // Show the hit marker for a short period (e.g., 0.2 seconds)
         if (aimingReticle.style.display === "none")
           aimingReticle.style.display = "block";
-        // if (!this.backgroundMusic) this.registerMusic();
+        if (!this.backgroundMusic) {
+          this.registerMusic();
+        }
       } else {
         console.log("unsuccessful click to start");
       }
@@ -159,8 +161,11 @@ export class Game {
     }
 
     [this.backgroundMusic] = await Promise.all([
-      loadAudio("/audio/assets/music/cryptaGlyph3.mp3"),
+      loadAudio("/assets/audio/music/cryptaGlyph3.mp3"),
     ]);
+
+    this.backgroundMusic.volume = 0.25;
+    this.backgroundMusic.loop = true;
     this.backgroundMusic.play().catch((error) => {
       console.error("Audio playback failed:", error);
     });
@@ -193,12 +198,12 @@ export class Game {
   manageEnemies() {
     // Check if we need to spawn a new enemy (max enemies = this.round + 1)
     const activeEnemies = this.enemies.filter((e) => !e.isDead); // Only count alive enemies
-    console.log(
-      "Active enemies: ",
-      activeEnemies.length,
-      " / ",
-      this.enemies.length
-    );
+    // console.log(
+    //   "Active enemies: ",
+    //   activeEnemies.length,
+    //   " / ",
+    //   this.enemies.length
+    // );
 
     if (activeEnemies.length < this.round + 1) {
       // Get random enemy configuration

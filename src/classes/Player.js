@@ -4,6 +4,7 @@ import { Weapon } from "./Weapon";
 
 export class Player {
   constructor(camera, scene, collisionManager) {
+    this.className = "Player";
     this.camera = camera;
     this.scene = scene;
     this.collisionManager = collisionManager;
@@ -120,24 +121,21 @@ export class Player {
   }
 
   update(deltaTime) {
-    // Check for ground detection
     this.checkGround();
 
-    // Get camera direction and right vectors (XZ plane only)
+    // Movement input handling (same as before)
     const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(
       this.camera.quaternion
     );
     const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(
       this.camera.quaternion
     );
-
     cameraDirection.y = 0;
     cameraRight.y = 0;
     cameraDirection.normalize();
     cameraRight.normalize();
 
     const targetVelocity = new THREE.Vector3(0, 0, 0);
-
     if (this.moveForward)
       targetVelocity.add(cameraDirection.multiplyScalar(this.stats.speed));
     if (this.moveBackward)
@@ -147,7 +145,7 @@ export class Player {
     if (this.moveRight)
       targetVelocity.add(cameraRight.multiplyScalar(this.stats.speed));
 
-    // Smooth out velocity
+    // Smooth velocity transition
     this.velocity.x += (targetVelocity.x - this.velocity.x) * this.acceleration;
     this.velocity.z += (targetVelocity.z - this.velocity.z) * this.acceleration;
 
@@ -155,10 +153,21 @@ export class Player {
       this.velocity.y -= this.gravity;
     }
 
-    // Store original velocity to test each direction independently
-    let originalVelocity = this.velocity.clone();
+    // Apply collisions AFTER velocity changes, ensuring we don't phase through walls
+    this.handleCollisions();
 
-    // Check for collisions and restrict movement in case of a collision
+    // Apply the final velocity to movement
+    this.camera.position.add(this.velocity);
+    this.playerMesh.position.copy(this.camera.position);
+    this.boundingBox.setFromObject(this.playerMesh);
+
+    // Update other elements
+    this.flashlight.update(this.camera);
+    this.weapon.update(deltaTime);
+  }
+
+  handleCollisions() {
+    // Ensure velocity adjustments respect wall collisions
     let collisionNormalX = this.collisionManager.checkStaticCollisions(
       this,
       "x"
@@ -169,7 +178,7 @@ export class Player {
         const velocityAlongNormal = collisionNormalX
           .clone()
           .multiplyScalar(dotProduct);
-        this.velocity.sub(velocityAlongNormal); // Stop movement along X axis
+        this.velocity.sub(velocityAlongNormal);
       }
     }
 
@@ -183,7 +192,7 @@ export class Player {
         const velocityAlongNormal = collisionNormalZ
           .clone()
           .multiplyScalar(dotProduct);
-        this.velocity.sub(velocityAlongNormal); // Stop movement along Z axis
+        this.velocity.sub(velocityAlongNormal);
       }
     }
 
@@ -197,17 +206,8 @@ export class Player {
         const velocityAlongNormal = collisionNormalY
           .clone()
           .multiplyScalar(dotProduct);
-        this.velocity.sub(velocityAlongNormal); // Stop movement along Y axis (vertical)
+        this.velocity.sub(velocityAlongNormal);
       }
     }
-
-    // After collision checks, allow movement only if no collisions
-    this.camera.position.add(this.velocity);
-    this.playerMesh.position.copy(this.camera.position);
-    this.boundingBox.setFromObject(this.playerMesh);
-
-    // Update other game elements (flashlight, weapon, etc.)
-    this.flashlight.update(this.camera);
-    this.weapon.update(deltaTime);
   }
 }
