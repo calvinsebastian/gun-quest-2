@@ -1,10 +1,7 @@
 export default {
   base: `./`,
   build: {
-    minify: "esbuild", // 🔹 Use ESBuild minifier
-    esbuild: {
-      keepNames: true, // 🔹 Preserve class names
-    },
+    outDir: "dist",
   },
   publicDir: `../static/`,
   root: `src/`,
