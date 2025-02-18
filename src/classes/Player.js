@@ -136,29 +136,50 @@ export class Player {
     if (this.moveRight)
       targetVelocity.add(cameraRight.multiplyScalar(this.speed));
 
-    this.velocity.x =
-      this.velocity.x +
-      (targetVelocity.x - this.velocity.x) * this.acceleration;
-    this.velocity.z =
-      this.velocity.z +
-      (targetVelocity.z - this.velocity.z) * this.acceleration;
+    // Smooth out velocity
+    this.velocity.x += (targetVelocity.x - this.velocity.x) * this.acceleration;
+    this.velocity.z += (targetVelocity.z - this.velocity.z) * this.acceleration;
 
     if (!this.isOnGround) {
       this.velocity.y -= this.gravity;
     }
 
-    // Move player based on velocity and update camera position
-    this.camera.position.add(this.velocity);
-    this.playerMesh.position.copy(this.camera.position);
-    this.boundingBox.setFromObject(this.playerMesh);
+    // Check for static collisions and get the normal direction if a collision occurs
+    const collisionNormal = this.collisionManager.checkStaticCollisions(this);
 
-    // Check for static collisions using CollisionManager
-    if (this.collisionManager.checkStaticCollisions(this)) {
-      this.camera.position.copy(prevPosition); // Prevent moving if collision detected
-      this.playerMesh.position.copy(prevPosition);
+    if (collisionNormal) {
+      const dotProduct = this.velocity.dot(collisionNormal);
+
+      if (dotProduct < 0) {
+        // If moving towards the wall, stop movement along the normal (perpendicular to the wall)
+        const velocityAlongNormal = collisionNormal
+          .clone()
+          .multiplyScalar(dotProduct);
+        this.velocity.sub(velocityAlongNormal); // Stop movement into the wall
+
+        // Allow sliding along the wall (keep movement parallel to the wall)
+        const parallelVelocity = this.velocity.clone();
+        parallelVelocity.y = 0; // Ensure no vertical movement
+        this.camera.position.add(parallelVelocity); // Apply movement along the wall
+        this.playerMesh.position.copy(this.camera.position);
+        this.boundingBox.setFromObject(this.playerMesh);
+
+        // Optional: Apply small sliding friction to slow the player down
+        this.velocity.multiplyScalar(0.95); // Adjust sliding friction as needed
+      } else {
+        // If not moving towards the wall (moving away), update normally
+        this.camera.position.add(this.velocity);
+        this.playerMesh.position.copy(this.camera.position);
+        this.boundingBox.setFromObject(this.playerMesh);
+      }
+    } else {
+      // No collision, normal movement
+      this.camera.position.add(this.velocity);
+      this.playerMesh.position.copy(this.camera.position);
       this.boundingBox.setFromObject(this.playerMesh);
     }
 
+    // Update other game elements (flashlight, weapon, etc.)
     this.flashlight.update(this.camera);
     this.weapon.update(deltaTime);
   }

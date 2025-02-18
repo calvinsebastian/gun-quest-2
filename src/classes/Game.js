@@ -14,29 +14,59 @@ export class Game {
   constructor() {
     this.state = new GameState({
       current: "loading",
-      view: { name: "test" },
+      view: { name: "testLevel001" },
       config: { viewport: "window" },
     });
     this.loadingManager = new THREE.LoadingManager();
     this.view = new View(this.state, this.loadingManager);
-    this.scene = this.view.scene;
-    this.camera = this.view.mainCamera;
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
 
-    // Get GPU info
-    const gl = this.renderer.getContext();
-    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-    let graphicsCardInfo = {
-      gpu: debugInfo
-        ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-        : "Unknown GPU - your experience may be unreliable",
-      vendor: debugInfo
-        ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
-        : "Unknown Vender - your experience may be unreliable",
-    };
+    // Wait for the setup to complete
+    this.view.setupPromise
+      .then(() => {
+        // Now that setup is complete, proceed with the rest of the initialization
+        this.scene = this.view.scene;
+        this.camera = this.view.mainCamera;
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Get GPU info
+        const gl = this.renderer.getContext();
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        this.graphicsCardInfo = {
+          gpu: debugInfo
+            ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+            : "Unknown GPU - your experience may be unreliable",
+          vendor: debugInfo
+            ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+            : "Unknown Vender - your experience may be unreliable",
+        };
 
-    this.renderer.setSize(config.viewportSize[this.state.viewport]);
-    document.body.appendChild(this.renderer.domElement);
+        this.renderer.setSize(config.viewportSize[this.state.viewport]);
+        document.body.appendChild(this.renderer.domElement);
+
+        //////////////////////////////////////////////////////////////////
+        //  ----------------------  GAME CLASSES  --------------------  //
+        //////////////////////////////////////////////////////////////////
+
+        this.controls = new PointerLockControls(
+          this.camera,
+          this.renderer.domElement
+        );
+        this.collisionManager = new CollisionManager(this.scene);
+        this.player = new Player(
+          this.camera,
+          this.scene,
+          this.collisionManager
+        );
+        this.enemies = [];
+        this.round = 0;
+
+        this.animate = this.animate.bind(this);
+        this.animate();
+
+        this.backgroundMusic = null;
+      })
+      .catch((error) => {
+        console.error("Error during setup:", error);
+      });
 
     // Add loading screen overlay
     this.loadingScreen = this.createLoadingScreen();
@@ -58,8 +88,8 @@ export class Game {
       loadingProgressElement.innerHTML = ``;
       loadingProgressElement.innerHTML = `<div><h1 class="click-to-start">Click to Register</h1>
        <p class="registration">This may take few moments depending on your hardware</p>
-      <p class="gpu-data">GPU: ${graphicsCardInfo.gpu}</p>
-      <p class="gpu-data">Vendor: ${graphicsCardInfo.vendor}</p>
+      <p class="gpu-data">GPU: ${this.graphicsCardInfo.gpu}</p>
+      <p class="gpu-data">Vendor: ${this.graphicsCardInfo.vendor}</p>
       </div> `;
 
       this.state.current = "running";
@@ -96,29 +126,15 @@ export class Game {
     });
 
     // Window resize handling
+    let resizeTimeout;
     window.addEventListener("resize", () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+      }, 200); // Delay to prevent too many calls
     });
-
-    //////////////////////////////////////////////////////////////////
-    //  ----------------------  GAME CLASSES  --------------------  //
-    //////////////////////////////////////////////////////////////////
-
-    this.controls = new PointerLockControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    this.collisionManager = new CollisionManager(this.scene);
-    this.player = new Player(this.camera, this.scene, this.collisionManager);
-    this.enemies = [];
-    this.round = 0;
-
-    this.animate = this.animate.bind(this);
-    this.animate();
-
-    this.backgroundMusic = null;
   }
 
   async registerMusic() {
@@ -213,7 +229,8 @@ export class Game {
       this.renderer.render(this.scene, this.camera);
     }
 
-    if (this.player.lockedControls && this.state.current === "running") {
+    if (this.player.lockedControls) {
+      if (this.state.current !== "running") return;
       if (this.player.enemiesKilled.total > roundRequirements[this.round]) {
         this.round += 1;
       }
@@ -226,21 +243,41 @@ export class Game {
           console.log("Enemy collided with player!", enemy);
         }
 
+        const hitEnemies = [];
         this.player.weapon.projectiles.forEach((proj) => {
-          // Using raycast for projectile collision detection
-
-          if (
-            this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
-          ) {
-            console.log("You shot the enemy!");
-            enemy.takeDamage(this.player.weapon.damage); // Damage value from the projectile
-            proj.onDestroy(proj);
-          }
+          this.enemies.forEach((enemy) => {
+            if (
+              this.collisionManager.checkProjectileCollisionsWithRay(
+                proj,
+                enemy
+              )
+            ) {
+              hitEnemies.push({ enemy, proj });
+            }
+          });
         });
+
+        // Process damage after the collision checks
+        hitEnemies.forEach(({ enemy, proj }) => {
+          enemy.takeDamage(this.player.weapon.damage);
+          proj.onDestroy(proj);
+        });
+
+        // this.player.weapon.projectiles.forEach((proj) => {
+        //   // Using raycast for projectile collision detection
+
+        //   if (
+        //     this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
+        //   ) {
+        //     console.log("You shot the enemy!");
+        //     enemy.takeDamage(this.player.weapon.damage); // Damage value from the projectile
+        //     proj.onDestroy(proj);
+        //   }
+        // });
       });
 
-      this.player.update(deltaTime); // Pass deltaTime to the player's update function
       // Update light position based on player direction
+      this.player.update(deltaTime); // Pass deltaTime to the player's update function
       this.view.update(deltaTime);
       this.renderer.render(this.scene, this.camera);
     }

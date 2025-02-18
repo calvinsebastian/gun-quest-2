@@ -84,7 +84,7 @@ export class Level {
         aoMap: ao,
         displacementMap: height,
         displacementScale: 0,
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide,
       });
 
       // Build Geometry
@@ -94,16 +94,21 @@ export class Level {
       );
 
       // Build Mesh
-
       const mesh = new THREE.Mesh(geometry, material);
 
-      // Clean this up
+      console.log(mesh);
 
+      // Set rotation and position of planes
       if (plane.rotation) mesh.rotation.set(...Object.values(plane.rotation));
       mesh.position.set(...Object.values(plane.position));
 
-      if (plane.type === "wall") {
-        mesh.isWall = true;
+      // Seperate
+      if (plane.collision) {
+        Object.keys(plane.collision).forEach((subject) => {
+          if (subject) {
+            mesh.collision = { ...mesh.collision, [subject]: true };
+          }
+        });
       }
       this.scene.add(mesh);
     });
