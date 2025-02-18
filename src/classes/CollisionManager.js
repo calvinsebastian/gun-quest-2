@@ -123,6 +123,8 @@ export class CollisionManager {
     player.stats.currentHealth =
       reducedPlayerHealth > 0 ? reducedPlayerHealth : 0;
 
+    console.log("Player health : ", player.stats.currentHealth);
+
     // Get the direction vector from the player to the enemy
     const direction = new THREE.Vector3().subVectors(
       player.camera.position,

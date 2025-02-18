@@ -111,19 +111,25 @@ export class Game {
     //  --------------------  EVENT LISTENERS  -------------------  //
     //////////////////////////////////////////////////////////////////
 
-    // Click to lock controls
-    document.body.addEventListener("click", () => {
+    const lockControls = () => {
+      // document.body.style.backgroundColor = "green";
       if (this.state.current !== "loading") {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.controls.lock();
         this.player.lockedControls = true;
-        // if (!this.backgroundMusic) this.registerMusic();
+        if (!this.backgroundMusic) this.registerMusic();
       } else {
         console.log("unsuccessful click to start");
       }
-    });
+    };
+
+    // Click to lock controls
+    document.body.addEventListener("click", lockControls);
+
+    // Click to lock controls
+    document.body.addEventListener("touchstart", lockControls, { once: true });
 
     // Window resize handling
     let resizeTimeout;
