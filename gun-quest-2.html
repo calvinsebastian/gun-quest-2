@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/css/gun-quest-2.css" />
+    <script type="module" src="/src/js/GunQuest2/GunQuest2.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gun Quest 2</title>
+  </head>
+  <body>
+    <!-- End of Aiming reticle -->
+    <div
+      id="aimingReticle"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+      "
+    >
+      <img src="assets/images/GunQuest2/aiming_reticle.png" alt="Hit Marker" />
+    </div>
+    <!-- End of Aiming reticle -->
+    <!-- Hit marker -->
+    <div
+      id="hitMarker"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1001;
+      "
+    >
+      <img src="assets/images/GunQuest2/hit_marker.png" alt="Hit Marker" />
+    </div>
+    <!-- Hit marker end -->
+    <!-- Game Over -->
+    <div
+      id="game-over"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1002;
+        background-color: rgba(0, 0, 0, 0.7);
+      "
+    >
+      <h1 style="color: red; font-size: 50px">You Died!</h1>
+    </div>
+    <!-- Game Over end -->
+  </body>
+</html>

@@ -1,0 +1,126 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  user-select: none;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: rgb(0, 0, 0);
+}
+
+@keyframes boxGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px 1px rgb(53, 236, 11);
+  }
+  50% {
+    transform: scale(1.05); /* Scale up slightly */
+    box-shadow: 0 3px 16px 1px rgb(53, 236, 11); /* Increase shadow size */
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px 1px rgb(53, 236, 11);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: 120px;
+  padding: 20px;
+  background-color: rgb(34, 34, 34);
+  box-shadow: 0 0 10px 2px rgb(209, 202, 202);
+  margin-bottom: 40px;
+  border-radius: 10px;
+
+  h1 {
+    margin: 20px 3px 18px 0;
+    font-size: 22px !important;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+
+  p {
+    font-family: monospace;
+    font-size: 14px;
+    margin: 0 0 20px 10px;
+  }
+}
+
+.game-card:hover {
+  transition: all 0.2s;
+  background-color: rgb(0, 0, 0);
+  box-shadow: 0 0 20px 3px rgb(58, 232, 15);
+  animation: boxGlow 1.2s infinite;
+  cursor: crosshair;
+}
+
+.game-title {
+  display: flex;
+  align-items: end;
+  justify-content: end;
+  color: rgb(58, 232, 15);
+}
+
+.alpha {
+  font-weight: bold;
+  color: rgb(207, 31, 31);
+}
+
+.beta {
+  font-weight: bold;
+  color: rgb(0, 140, 255);
+}
+
+.home-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.play-btn {
+  background: transparent;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.3s;
+  border-radius: 50%;
+  text-transform: uppercase;
+}
+
+.play-btn:hover {
+  background: #e03e00;
+}

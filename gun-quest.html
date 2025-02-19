@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gun Quest</title>
+
+    <link rel="stylesheet" href="/src/css/gun-quest.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="background-image: url('assets/images/GunQuest/gunQuestBG1.png')">
+    <main id="container" class="container">
+      <div id="title-screen" class="title-screen">
+        <h1>Welcome to Gun Quest</h1>
+        <button id="start-game" class="start-menu-button">Start Game</button>
+        <button id="highscores-button" class="start-menu-button">
+          Highscores
+        </button>
+        <button id="settings-button" class="start-menu-button">Settings</button>
+      </div>
+      <div id="settings-screen" class="settings-screen">
+        <div class="settings-screen-container">
+          <h1>Settings</h1>
+          <h2>Gameplay</h2>
+          <div class="settings-list-item">
+            <span class="settings-label">Practice Mode *</span
+            ><input
+              id="easy-mode-toggle"
+              class="custom-checkbox"
+              type="checkbox"
+            />
+          </div>
+          <span class="settings-footnote">* Cannot post highscore</span>
+          <h2>Video</h2>
+          <div class="settings-list-item">
+            <span class="settings-label">Enable Smoothing</span
+            ><input
+              id="smoothing-toggle"
+              class="custom-checkbox"
+              type="checkbox"
+              checked
+            />
+          </div>
+          <h2>Audio</h2>
+          <div class="settings-list-item">
+            <span class="settings-label">Music</span
+            ><input
+              id="music-toggle"
+              class="custom-checkbox"
+              type="checkbox"
+              checked
+            />
+          </div>
+          <div class="settings-list-item">
+            <span class="settings-label">Effects</span
+            ><input
+              id="effects-toggle"
+              class="custom-checkbox"
+              type="checkbox"
+              checked
+            />
+          </div>
+          <button id="settings-return-button" class="start-menu-button">
+            Back
+          </button>
+        </div>
+      </div>
+      <div id="mobile-message" class="mobile-message">
+        <span> Incompatible screen size </span>
+        <p>Some televisions and monitors may have their resolution scaled.</p>
+        <p>
+          If you are on a television or believe this message is being shown
+          incorrectly try zooming out by pressing the control and - keys until
+          the image appears correctly
+        </p>
+      </div>
+      <div id="hud" class="hud">
+        <div class="hud-info">
+          <div class="vertical-container">
+            <div class="list-item">
+              <span class="label">Round:</span
+              ><span id="round" class="value"></span>
+            </div>
+            <div class="list-item">
+              <span class="label">Score:</span
+              ><span id="score" class="value"></span>
+            </div>
+            <div class="list-item">
+              <span class="label">Health:</span
+              ><span id="health" class="value"></span>
+            </div>
+            <div class="list-item">
+              <span class="label">Stamina:</span
+              ><span id="stamina" class="value"></span>
+            </div>
+          </div>
+          <div class="weapon-container">
+            <img id="weapon" alt="weapon image" />
+            <div class="weapon-ammo">
+              <span class="label">Ammo:</span>
+
+              <span id="ammo" class="value"></span>
+            </div>
+          </div>
+          <div class="controls-container">
+            <div class="list-item">
+              <span class="label">Move:</span
+              ><span class="value">WASD or arrows</span>
+            </div>
+            <div class="list-item">
+              <span class="label">Sprint:</span
+              ><span class="value">Shift or space</span>
+            </div>
+            <div class="list-item">
+              <span class="label">Aim:</span><span class="value">Cursor</span>
+            </div>
+            <div class="list-item">
+              <span class="label">Shoot:</span
+              ><span class="value">Left mouse</span>
+            </div>
+            <div class="list-item">
+              <span class="label">Weapons:</span
+              ><span class="value">Right mouse</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-container">
+          <button class="user-control" id="pause">Shop (e)</button>
+          <div class="settings-container">
+            <button class="user-control" id="fullScreen">
+              Full Screen (f)
+            </button>
+            <button class="user-control" id="mute">Mute (m)</button>
+          </div>
+        </div>
+      </div>
+      <div id="viewport-container" class="viewport-container">
+        <canvas id="overlay" class="overlay"></canvas>
+        <canvas id="viewport" class="viewport"> </canvas>
+        <div class="store-container">
+          <h1 id="store-title">Spend your hard earned points here</h1>
+          <div class="projectile-stat-container">
+            <div class="projectile-stat">
+              <span>Ammo</span>
+              <span id="ammo-up"></span>
+            </div>
+            <div class="projectile-stat">
+              <span>Damage</span>
+              <span id="damage"></span>
+            </div>
+            <div class="projectile-stat">
+              <span>Fire rate</span>
+              <span id="speed"></span>
+            </div>
+            <div class="projectile-stat">
+              <span>Knockback</span>
+              <span id="knockback"></span>
+            </div>
+          </div>
+          <h2 id="store-weapon-name"></h2>
+          <div class="carousel-container">
+            <button id="cycle-weapon-left" class="nav-button">&lt;</button>
+            <image id="store-weapon-image"></image>
+            <button id="cycle-weapon-right" class="nav-button">&gt;</button>
+          </div>
+          <div class="carousel-container">
+            <button id="cycle-upgrade-left" class="nav-button">&lt;</button>
+            <image id="store-upgrade-image"></image>
+            <button id="cycle-upgrade-right" class="nav-button">&gt;</button>
+          </div>
+          <div class="cost-container">
+            <span>Cost</span><span id="cost"></span>
+          </div>
+          <div id="value-container" class="value-container">
+            <span>Increase by</span><span id="value"></span>
+          </div>
+          <button id="upgrade-button" class="store-button">Upgrade</button>
+          <button id="buy-button" class="store-button">Buy</button>
+          <button id="unlock-button" class="unlock-button">Unlocks</button>
+        </div>
+        <div class="achievement-container hide" id="achievement-container">
+          <button class="back-button" id="back-button">Back</button>
+          <h1 id="achievement-title">Achievement Unlocks</h1>
+          <div
+            class="achievement-unlock-container"
+            id="achievement-unlock-container"
+          ></div>
+        </div>
+      </div>
+      <div class="highscore-container" id="highscore-container">
+        <div class="highscore-list" id="highscore-list"></div>
+        <div class="highscore-form" id="highscore-form">
+          <button class="highscore-submit-button" id="highscore-submit-button">
+            SUBMIT
+          </button>
+        </div>
+      </div>
+    </main>
+    <audio
+      id="gunshot-sound"
+      src="assets/audio/effects/gunshot1.wav"
+      preload="auto"
+    ></audio>
+    <script type="module" src="/src/js/GunQuest/GunQuest.js"></script>
+  </body>
+</html>
