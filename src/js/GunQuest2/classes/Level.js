@@ -2,8 +2,9 @@ import * as THREE from "three";
 import { generateUUID, getMapPosition } from "../js/utility";
 
 export class Level {
-  constructor(scene, loadingManager, levelConfig) {
+  constructor(scene, renderer, loadingManager, levelConfig) {
     this.scene = scene;
+    this.renderer = renderer;
     this.loadingManager = loadingManager;
     this.config = levelConfig;
 
@@ -43,6 +44,13 @@ export class Level {
             this.textureLoader.load(
               path,
               (texture) => {
+                texture.minFilter = THREE.LinearMipMapLinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                texture.anisotropy = Math.min(
+                  this.renderer.capabilities.getMaxAnisotropy(),
+                  4
+                );
+
                 this.textures[k] = { ...this.textures[k], [key]: texture };
                 const { length, height, repeatValue } =
                   this.config.textures[k].repeating;

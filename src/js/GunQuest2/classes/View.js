@@ -2,36 +2,38 @@ import * as THREE from "three";
 import { Level } from "./Level";
 
 export class View {
-  constructor(state, loadingManager) {
+  constructor(state, renderer, loadingManager) {
     this.state = state.current;
+    this.renderer = renderer;
     this.name = state.view.name;
+    this.loadingManager = loadingManager;
+    this.scene = new THREE.Scene();
 
-    // Return a promise that resolves when setup is complete
-    this.setupPromise = this.initializeViewConfig(this.name, loadingManager);
+    // Store lights and cameras
+    this.lights = [];
+
+    // Setup promise to ensure full setup before Game.js continues
+    this.setupPromise = this.initializeViewConfig(this.name);
   }
 
-  async initializeViewConfig(filename, loadingManager) {
+  async initializeViewConfig(filename) {
     try {
       this.viewConfig = await this.generateConfig(filename);
       if (!this.viewConfig) {
         throw new Error("Failed to load view configuration");
       }
 
-      // Proceed with the rest of the setup once config is loaded
-      this.scene = new THREE.Scene();
-      this.loadingManager = loadingManager;
-      this.lights = this.viewConfig.lights;
-      this.cameras = this.viewConfig.cameras;
+      // Load level first before proceeding
       this.level = new Level(
         this.scene,
+        this.renderer,
         this.loadingManager,
         this.viewConfig.level
       );
+      await this.level.load(); // Ensure level is fully loaded
 
-      //////////////////////////////////////////////////////////////////
-      //  ----------------------  SCENE SETUP  ---------------------  //
-      //////////////////////////////////////////////////////////////////
-      this.setUpScene();
+      this.setUpLights(this.viewConfig.lights);
+      this.setUpCameras(this.viewConfig.cameras);
     } catch (error) {
       console.error("Error in initializing view:", error);
     }
@@ -39,30 +41,17 @@ export class View {
 
   async generateConfig(filename) {
     console.log("Loading configuration for:", filename);
-
-    // Define the path to your level config JSON
     const configPath = `/assets/levels/${filename}.json`;
 
-    // Fetch the configuration file
     try {
       const response = await fetch(configPath);
-      const configData = await response.json();
-
-      if (!configData) {
-        throw new Error(`No configuration found for ${filename}`);
-      }
-      return configData;
+      if (!response.ok)
+        throw new Error(`Failed to fetch config: ${response.statusText}`);
+      return await response.json();
     } catch (error) {
       console.error("Error loading configuration:", error);
-      return null; // Or handle with a default/fallback config
+      return null;
     }
-  }
-
-  setUpScene() {
-    console.log("setting up scene", this.viewConfig);
-    this.level.load();
-    this.setUpLights(this.lights);
-    this.setUpCameras(this.cameras);
   }
 
   setUpCameras(cameras) {
@@ -88,16 +77,20 @@ export class View {
   }
 
   setUpLights(lights) {
-    lights.forEach((light) => {
-      this[light.label] = new THREE[light.type](light.color, light.intensity);
-      if (light.position) {
-        this[light.label].position.set(
-          light.position.x,
-          light.position.y,
-          light.position.z
+    lights.forEach((lightConfig) => {
+      const light = new THREE[lightConfig.type](
+        lightConfig.color,
+        lightConfig.intensity
+      );
+      if (lightConfig.position) {
+        light.position.set(
+          lightConfig.position.x,
+          lightConfig.position.y,
+          lightConfig.position.z
         );
       }
-      this.scene.add(this[light.label]);
+      this.scene.add(light);
+      this.lights.push(light);
     });
   }
 

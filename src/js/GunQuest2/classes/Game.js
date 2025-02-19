@@ -19,7 +19,8 @@ export class Game {
       config: { viewport: "window" },
     });
     this.loadingManager = new THREE.LoadingManager();
-    this.view = new View(this.state, this.loadingManager);
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.view = new View(this.state, this.renderer, this.loadingManager);
 
     // Wait for the setup to complete
     this.view.setupPromise
@@ -27,7 +28,6 @@ export class Game {
         // Now that setup is complete, proceed with the rest of the initialization
         this.scene = this.view.scene;
         this.camera = this.view.mainCamera;
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
         // Get GPU info
         const gl = this.renderer.getContext();
         const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
@@ -114,11 +114,10 @@ export class Game {
 
     const lockControls = () => {
       // document.body.style.backgroundColor = "green";
-      if (this.state.current !== "loading") {
+      if (this.state.current !== "loading" && !this.player.lockedControls) {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.controls.lock();
         this.player.lockedControls = true;
         const aimingReticle = document.getElementById("aimingReticle");
 
@@ -127,18 +126,24 @@ export class Game {
           aimingReticle.style.display = "block";
         if (!this.backgroundMusic) {
           console.log("Initializing background music");
-          // this.registerMusic();
+          this.registerMusic();
         }
-      } else {
-        console.log("unsuccessful click to start");
+      }
+      if (!this.controls.isLocked) {
+        // console.log("LockControls finished execution at:", performance.now());
+        // setTimeout(() => {
+        //   console.log("Game still lagging? Checking at:", performance.now());
+        // }, 1000); // Logs again after 1 second
+
+        this.controls.lock();
       }
     };
 
     // Click to lock controls
     document.body.addEventListener("click", lockControls);
 
-    // Click to lock controls
-    document.body.addEventListener("touchstart", lockControls, { once: true });
+    // Mobile Click to lock controls
+    // document.body.addEventListener("touchstart", lockControls, { once: true });
 
     // Window resize handling
     let resizeTimeout;
@@ -163,7 +168,11 @@ export class Game {
     }
 
     [this.backgroundMusic] = await Promise.all([
-      loadAudio("/assets/audio/music/cryptaGlyph3.mp3"),
+      loadAudio(
+        `/assets/audio/music/cryptaGlyph${Math.floor(
+          Math.random() * 3 + 1
+        )}.mp3`
+      ),
     ]);
 
     this.backgroundMusic.volume = 0.25;
@@ -256,85 +265,50 @@ export class Game {
     this.lastTime = currentTime; // Store the current time for the next frame
 
     requestAnimationFrame(this.animate);
+    this.renderer.render(this.scene, this.camera);
 
     if (!this.controls.isLocked) {
       this.player.lockedControls = false;
     } else if (this.loadingScreen.style.display === "flex") {
       this.loadingScreen.style.display = "none";
-      this.renderer.render(this.scene, this.camera);
+      console.log("Hiding loading screen...");
     }
 
     if (this.player.lockedControls) {
       if (this.state.current !== "running") return;
       if (this.player.isDead) {
+        console.log("Player is dead, stopping animation.");
         return this.gameOver();
       }
 
       if (this.player.enemiesKilled.total > roundRequirements[this.round]) {
         this.round += 1;
       }
-      this.manageEnemies();
 
+      this.manageEnemies();
       this.enemies.forEach((enemy) => {
         enemy.update(deltaTime);
-
-        if (!enemy.collidedWithPlayer) {
-          if (this.collisionManager.checkEnemyCollisions(enemy, this.player)) {
-            playSound(
-              this.player.stats.currentHealth > 0
-                ? "/assets/audio/effects/hit.wav"
-                : "/assets/audio/effects/death.wav",
-              0.5
-            );
-
-            if (this.player.stats.currentHealth <= 0) {
-              this.player.isDead = true;
-            }
-
-            this.collisionManager.handleEnemyPlayerCollision(
-              enemy,
-              this.player
-            );
-          }
-        }
-
-        const hitEnemies = [];
-        this.player.weapon.projectiles.forEach((proj) => {
-          this.enemies.forEach((enemy) => {
-            if (
-              this.collisionManager.checkProjectileCollisionsWithRay(
-                proj,
-                enemy
-              )
-            ) {
-              hitEnemies.push({ enemy, proj });
-            }
-          });
-        });
-
-        // Process damage after the collision checks
-        hitEnemies.forEach(({ enemy, proj }) => {
-          enemy.takeDamage(this.player.weapon.damage);
-          proj.onDestroy(proj);
-          this.player.showHitMarker();
-        });
-
-        // this.player.weapon.projectiles.forEach((proj) => {
-        //   // Using raycast for projectile collision detection
-
-        //   if (
-        //     this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
-        //   ) {
-        //     console.log("You shot the enemy!");
-        //     enemy.takeDamage(this.player.weapon.damage); // Damage value from the projectile
-        //     proj.onDestroy(proj);
-        //   }
-        // });
       });
 
-      // Update light position based on player direction
+      const projectileStart = performance.now();
+      const hitEnemies = [];
+      this.player.weapon.projectiles.forEach((proj) => {
+        this.enemies.forEach((enemy) => {
+          if (
+            this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
+          ) {
+            hitEnemies.push({ enemy, proj });
+          }
+        });
+      });
+
+      hitEnemies.forEach(({ enemy, proj }) => {
+        enemy.takeDamage(this.player.weapon.damage);
+        proj.onDestroy(proj);
+        this.player.showHitMarker();
+      });
+
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
-      this.view.update(deltaTime);
       this.renderer.render(this.scene, this.camera);
     }
   }

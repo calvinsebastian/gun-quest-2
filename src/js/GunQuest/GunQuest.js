@@ -209,7 +209,7 @@ async function initialize() {
     [backgroundMusic] = await Promise.all([
       loadAudio(
         easyToggle.checked
-          ? "assets/audio/music/cryptaGlyph.mp3"
+          ? "assets/audio/music/cryptaGlyph1.mp3"
           : "assets/audio/music/cryptaGlyph3.mp3"
       ),
     ]);

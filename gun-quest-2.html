@@ -38,22 +38,15 @@
       <img src="assets/images/GunQuest2/hit_marker.png" alt="Hit Marker" />
     </div>
     <!-- Hit marker end -->
-    <!-- Game Over -->
-    <div
-      id="game-over"
-      style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 1002;
-        background-color: rgba(0, 0, 0, 0.7);
-      "
-    >
-      <h1 style="color: red; font-size: 50px">You Died!</h1>
+
+    <div id="game-over" class="game-over">
+      <h1>You Died!</h1>
     </div>
-    <!-- Game Over end -->
+
+    <audio
+      id="gunshot-sound"
+      src="assets/audio/effects/gunshot1.wav"
+      preload="auto"
+    ></audio>
   </body>
 </html>

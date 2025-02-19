@@ -48,6 +48,24 @@ body {
   animation: pulse 0.5s ease-out;
 }
 
+.game-over {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  z-index: 1002;
+  background-color: rgba(0, 0, 0, 0.7);
+
+  h1 {
+    color: red;
+    font-size: 50px;
+  }
+}
+
 .gpu-data {
   font-size: 12px;
   font-family: monospace;

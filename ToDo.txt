@@ -5,3 +5,8 @@ Map Creation Help
 Create Map using this site - https://app.dungeonscrawl.com/
 
 Share screenshot with chatGPT to generate 2d array to add to JSON file
+
+
+Optimized App changes:
+
+View.js // 
