@@ -1,5 +1,4 @@
 // In Projectile.js
-import * as THREE from "three";
 
 export class Projectile {
   constructor(scene, origin, direction, onDestroy) {

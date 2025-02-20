@@ -78,23 +78,23 @@ export class View {
 
   setUpLights(lights) {
     lights.forEach((lightConfig) => {
-      const light = new THREE[lightConfig.type](
+      this[lightConfig.label] = new THREE[lightConfig.type](
         lightConfig.color,
         lightConfig.intensity
       );
       if (lightConfig.position) {
-        light.position.set(
+        this[lightConfig.label].position.set(
           lightConfig.position.x,
           lightConfig.position.y,
           lightConfig.position.z
         );
       }
-      this.scene.add(light);
-      this.lights.push(light);
+      this.scene.add(this[lightConfig.label]);
+      this.lights.push(this[lightConfig.label]);
     });
   }
 
   update() {
-    console.log("updating");
+    // console.log("updating");
   }
 }

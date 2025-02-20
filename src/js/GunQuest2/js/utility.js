@@ -28,11 +28,13 @@ export function generateUUID() {
 //   return { x: x, y: y, z: z };
 // }
 
-export function generateEnemyPosition(occupiedCells, playerPosition) {
+export function generateEnemyPosition(occupiedCells, playerPosition, round) {
   const gridSize = 20; // Adjust based on your map size
-  const minDistance = 3; // Minimum grid distance from player
+  const minDistance = 5; // Minimum grid distance from player
+  const maxDistance = 16 + (round - 1); // Max distance increases as rounds go on (10 units per round)
   let spawnGridPos;
   let attempts = 0;
+  console.log("attempts", attempts);
   const maxAttempts = 100; // Avoid infinite loops
 
   // Get the player's grid position
@@ -52,7 +54,8 @@ export function generateEnemyPosition(occupiedCells, playerPosition) {
     const dz = gridZ - playerGridPos.z;
     const distance = Math.sqrt(dx * dx + dz * dz);
 
-    if (!isOccupied && distance >= minDistance) {
+    // Ensure spawn position is within the desired range
+    if (!isOccupied && distance >= minDistance && distance <= maxDistance) {
       break; // Found a valid position
     }
 

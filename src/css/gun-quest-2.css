@@ -22,7 +22,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background-color: rgb(179, 84, 84);
+  background-color: rgb(0, 0, 0);
 
   h1 {
     text-align: center;
@@ -56,8 +56,19 @@ body {
   z-index: 1000;
 }
 
+.disclaimer {
+  width: 600px;
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 500;
+  color: rgb(207, 200, 200);
+  margin: 0;
+  margin-top: 20px;
+}
+
 .game-over {
   display: none;
+  flex-direction: column;
   position: fixed;
   top: 0;
   left: 0;
@@ -105,4 +116,11 @@ body {
 
 .registration {
   text-align: center;
+}
+
+.your-highscore {
+  margin-top: 30px;
+  color: red;
+  font-size: 20px;
+  font-family: monospace;
 }

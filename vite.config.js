@@ -11,6 +11,9 @@ export default {
       },
     },
   },
+  optimizeDeps: {
+    include: ["three", "three/examples/jsm/utils/BufferGeometryUtils"],
+  },
   publicDir: "public", // Static assets directory
   server: {
     host: "0.0.0.0", // Access from network

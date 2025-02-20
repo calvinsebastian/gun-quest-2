@@ -109,7 +109,6 @@ export class CollisionManager {
 
     // If the ray intersects the enemy, handle the collision
     if (intersects.length > 0) {
-      console.log("Projectile hit the enemy!");
       proj.onDestroy(proj); // Destroy the projectile
       return true; // Return true when a collision is detected
     }
@@ -137,7 +136,6 @@ export class CollisionManager {
     direction.normalize();
 
     // Calculate the relative velocity between the player and enemy
-    console.log(enemy);
     const playerVelocity = player.velocity.clone();
     const enemyVelocity = enemy.velocity.clone();
 

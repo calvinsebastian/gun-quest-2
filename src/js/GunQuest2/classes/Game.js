@@ -106,6 +106,7 @@ export class Game {
        <p class="registration">This may take a few moments depending on your hardware</p>
       <p class="gpu-data">GPU: ${this.graphicsCardInfo.gpu}</p>
       <p class="gpu-data">Vendor: ${this.graphicsCardInfo.vendor}</p>
+      <p class="disclaimer">Disclaimer: This Game is in Alpha and will have bugs! I will have a bug report system in place in the future. Thank you for your patience! </p>
       </div> `;
 
       this.state.current = "running";
@@ -136,7 +137,6 @@ export class Game {
         this.player.lockedControls = true;
         const aimingReticle = document.getElementById("aimingReticle");
 
-        console.log(aimingReticle.style);
         if (aimingReticle.style.display === "none")
           aimingReticle.style.display = "block";
         if (!this.backgroundMusic) {
@@ -227,15 +227,18 @@ export class Game {
     if (activeEnemies.length < this.round + 1) {
       // Get random enemy configuration
       const enemyArrayIndex = this.round - 1;
+      const enemySpawnPoint = generateEnemyPosition(
+        this.view.level.occupiedCells,
+        this.player.camera.position,
+        this.round
+      );
       const enemyConfig = {
         ...enemies[enemyArrayIndex][
-          Math.floor(Math.random() * enemies[enemyArrayIndex].length)
+          Math.floor(Math.random() * enemies[enemyArrayIndex]?.length)
         ],
+        rareSpawn: Math.random() < 0.1,
         uuid: generateUUID(),
-        position: generateEnemyPosition(
-          this.view.level.occupiedCells,
-          this.player.camera.position
-        ),
+        position: enemySpawnPoint,
       };
 
       // Create a new enemy and pass the onDestroy callback
@@ -267,13 +270,21 @@ export class Game {
     this.player.lockedControls = false;
     if (!this.restartingGame) {
       this.restartingGame = true;
-      console.log("game over");
+      console.log("Game over");
       const gameOverScreen = document.getElementById("game-over");
       gameOverScreen.style.display = "flex";
 
+      // Create a new div element
+      const scoreDiv = document.createElement("div");
+      scoreDiv.classList.add("your-highscore");
+      scoreDiv.innerHTML = `Your Highscore : ${this.player.points}`; // Set the content of the div
+
+      // Append the new div to the gameOverScreen
+      gameOverScreen.appendChild(scoreDiv);
+
       setTimeout(() => {
         window.location.reload(); // This will reload the page
-      }, 3000); // Delay before reload
+      }, 5000); // Delay before reload
     }
   }
 

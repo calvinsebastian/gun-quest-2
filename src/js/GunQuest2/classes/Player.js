@@ -15,6 +15,8 @@ export class Player {
       maxHealth: 50,
       knockbackForce: 5,
     };
+    this.points = 0;
+
     this.acceleration = 0.1; // Acceleration for smooth movement
     this.gravity = 0.2; // Gravity force
     this.isOnGround = false;
