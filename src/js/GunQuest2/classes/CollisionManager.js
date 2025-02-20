@@ -118,6 +118,12 @@ export class CollisionManager {
   }
 
   handleEnemyPlayerCollision(enemy, player) {
+    player.showInjury = true;
+
+    setTimeout(() => {
+      player.showInjury = false;
+    }, 50); // Flash duration
+
     // Adjust player health
     const reducedPlayerHealth =
       player.stats.currentHealth - enemy.stats.damage.melee.value;
@@ -131,6 +137,7 @@ export class CollisionManager {
     direction.normalize();
 
     // Calculate the relative velocity between the player and enemy
+    console.log(enemy);
     const playerVelocity = player.velocity.clone();
     const enemyVelocity = enemy.velocity.clone();
 
@@ -148,16 +155,14 @@ export class CollisionManager {
     // Apply knockback to the enemy
     const oppositeDirection = direction.clone().negate(); // Get the opposite direction
 
-    const enemyKnockBack = 50; // this can be passed dynamically later
-
-    const enemyPushForce = oppositeDirection
+    const enemyKnockBack = oppositeDirection
       .clone()
-      .multiplyScalar(enemyKnockBack); // Apply the opposite force
+      .multiplyScalar(player.stats.knockbackForce); // Apply the opposite force
 
     // Apply knockback only if the enemy is not already knocked back
     enemy.isKnockedBack = true;
     enemy.collidedWithPlayer = true;
-    enemy.velocity.set(0, 0, 0).add(enemyPushForce); // Apply knockback force
+    enemy.velocity.set(0, 0, 0).add(enemyKnockBack); // Apply knockback force
 
     // Stop knockback after some time (e.g., 1 second)
     setTimeout(() => {

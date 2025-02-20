@@ -36,7 +36,8 @@
           "repeatValue": 1.2
         },
         "paths": {
-          "albedo": "/assets/textures/walls/wall001/jasons_first_corno.jpg",
+          "albedo": "/assets/textures/walls/wall001/random_bricks_thick_diff_4k.jpg",
+          "alt": "/assets/textures/walls/wall001/jasons_first_corno.jpg",
           "normal": "/assets/textures/walls/wall001/random_bricks_thick_nor_dx_4k.jpg",
           "roughness": "/assets/textures/walls/wall001/random_bricks_thick_rough_4k.jpg",
           "metallic": "/assets/textures/walls/wall001/random_bricks_thick_nor_gl_4k.jpg",
@@ -95,31 +96,7 @@
     },
     "staticObjects": {
       "objects": {
-        "perimeters": [
-          {
-            "id": "uuid_floor_0001",
-            "texturePack": "floor001",
-            "type": "floor",
-            "collision": {
-              "Player": true,
-              "Enemy": true
-            },
-            "geometryType": "PlaneGeometry",
-            "dimensions": {
-              "width": 96,
-              "height": 96
-            },
-            "position": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "rotation": {
-              "x": -1.5707963267948966,
-              "y": 0,
-              "z": 0
-            }
-          },
+        "ceilings": [
           {
             "id": "uuid_ceiling_0001",
             "texturePack": "ceiling001",
@@ -143,7 +120,35 @@
               "y": 0,
               "z": 0
             }
-          },
+          }
+        ],
+        "floors": [
+          {
+            "id": "uuid_floor_0001",
+            "texturePack": "floor001",
+            "type": "floor",
+            "collision": {
+              "Player": true,
+              "Enemy": true
+            },
+            "geometryType": "PlaneGeometry",
+            "dimensions": {
+              "width": 96,
+              "height": 96
+            },
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": -1.5707963267948966,
+              "y": 0,
+              "z": 0
+            }
+          }
+        ],
+        "perimeter_walls": [
           {
             "id": "uuid_perimeter_wall_north_0001",
             "texturePack": "perimeterWall001",

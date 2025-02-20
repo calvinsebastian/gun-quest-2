@@ -9,11 +9,19 @@ export class Player {
     this.scene = scene;
     this.collisionManager = collisionManager;
     this.velocity = new THREE.Vector3();
-    this.stats = { speed: 0.1, currentHealth: 50, maxHealth: 50 };
+    this.stats = {
+      speed: 0.1,
+      currentHealth: 50,
+      maxHealth: 50,
+      knockbackForce: 5,
+    };
     this.acceleration = 0.1; // Acceleration for smooth movement
     this.gravity = 0.2; // Gravity force
     this.isOnGround = false;
     this.lockedControls = false; // Prevent player input
+
+    this.showInjury = false;
+    this.injuryOverlay = document.getElementById("player-injury-overlay");
 
     this.cameraHeight = 1.6; // Camera height above ground
     this.playerHeight = 1.8; // Full height of player (for collision detection)
@@ -121,6 +129,12 @@ export class Player {
   }
 
   update(deltaTime) {
+    if (this.showInjury) {
+      this.injuryOverlay.style.display = "flex";
+    } else {
+      this.injuryOverlay.style.display = "none";
+    }
+
     this.checkGround();
 
     // Movement input handling (same as before)

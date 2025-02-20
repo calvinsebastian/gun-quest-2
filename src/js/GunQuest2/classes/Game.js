@@ -10,6 +10,21 @@ import { enemies } from "../js/variables/enemies";
 import { generateEnemyPosition, generateUUID } from "../js/utility";
 import { roundRequirements } from "../js/variables/roundRequirements";
 import { playSound } from "./SoundManager";
+import Stats from "stats.js";
+
+const stats1 = new Stats();
+stats1.showPanel(0); // FPS
+document.body.appendChild(stats1.dom);
+
+const stats2 = new Stats();
+stats2.showPanel(1); // MS
+stats2.dom.style.cssText = "position:absolute;top:0;left:80px;";
+document.body.appendChild(stats2.dom);
+
+const stats3 = new Stats();
+stats3.showPanel(2); // Memory
+stats3.dom.style.cssText = "position:absolute;top:0;left:160px;";
+document.body.appendChild(stats3.dom);
 
 export class Game {
   constructor() {
@@ -58,7 +73,7 @@ export class Game {
           this.collisionManager
         );
         this.enemies = [];
-        this.round = 0;
+        this.round = 1;
 
         this.animate = this.animate.bind(this);
         this.animate();
@@ -121,7 +136,7 @@ export class Game {
         this.player.lockedControls = true;
         const aimingReticle = document.getElementById("aimingReticle");
 
-        // Show the hit marker for a short period (e.g., 0.2 seconds)
+        console.log(aimingReticle.style);
         if (aimingReticle.style.display === "none")
           aimingReticle.style.display = "block";
         if (!this.backgroundMusic) {
@@ -142,8 +157,8 @@ export class Game {
     // Click to lock controls
     document.body.addEventListener("click", lockControls);
 
-    // Mobile Click to lock controls
-    // document.body.addEventListener("touchstart", lockControls, { once: true });
+    // Click to lock controls
+    document.body.addEventListener("touchstart", lockControls, { once: true });
 
     // Window resize handling
     let resizeTimeout;
@@ -207,38 +222,41 @@ export class Game {
   }
 
   manageEnemies() {
-    // Check if we need to spawn a new enemy (max enemies = this.round + 1)
     const activeEnemies = this.enemies.filter((e) => !e.isDead); // Only count alive enemies
-    // console.log(
-    //   "Active enemies: ",
-    //   activeEnemies.length,
-    //   " / ",
-    //   this.enemies.length
-    // );
 
     if (activeEnemies.length < this.round + 1) {
       // Get random enemy configuration
+      const enemyArrayIndex = this.round - 1;
       const enemyConfig = {
-        ...enemies[this.round][
-          Math.floor(Math.random() * enemies[this.round].length)
+        ...enemies[enemyArrayIndex][
+          Math.floor(Math.random() * enemies[enemyArrayIndex].length)
         ],
         uuid: generateUUID(),
-        position: generateEnemyPosition(),
+        position: generateEnemyPosition(
+          this.view.level.occupiedCells,
+          this.player.camera.position
+        ),
       };
 
       // Create a new enemy and pass the onDestroy callback
-      const enemy = new Enemy(this.scene, this.player, enemyConfig, (e) => {
-        e.isDead = true; // Mark as dead
+      const enemy = new Enemy(
+        this.scene,
+        this.view.level,
+        this.player,
+        enemyConfig,
+        (e) => {
+          e.isDead = true; // Mark as dead
 
-        // Find and remove the enemy from the enemies array
-        const index = this.enemies.findIndex((obj) => obj.uuid === e.uuid);
-        if (index !== -1) {
-          // Remove the enemy from the array
-          this.enemies.splice(index, 1);
-          this.player.enemiesKilled[this.player.weapon.name] += 1;
-          this.player.enemiesKilled.total += 1;
+          // Find and remove the enemy from the enemies array
+          const index = this.enemies.findIndex((obj) => obj.uuid === e.uuid);
+          if (index !== -1) {
+            // Remove the enemy from the array
+            this.enemies.splice(index, 1);
+            this.player.enemiesKilled[this.player.weapon.name] += 1;
+            this.player.enemiesKilled.total += 1;
+          }
         }
-      });
+      );
 
       // Add the newly created enemy to the enemies array
       this.enemies.push(enemy);
@@ -246,11 +264,12 @@ export class Game {
   }
 
   gameOver() {
+    this.player.lockedControls = false;
     if (!this.restartingGame) {
       this.restartingGame = true;
       console.log("game over");
       const gameOverScreen = document.getElementById("game-over");
-      gameOverScreen.style.display = "block";
+      gameOverScreen.style.display = "flex";
 
       setTimeout(() => {
         window.location.reload(); // This will reload the page
@@ -260,6 +279,11 @@ export class Game {
 
   // Main animation loop
   animate() {
+    // Performance monitoring
+    stats1.begin();
+    stats2.begin();
+    stats3.begin();
+
     const currentTime = performance.now(); // Get the current time in milliseconds
     const deltaTime = (currentTime - this.lastTime) / 1000; // Calculate the time difference in seconds
     this.lastTime = currentTime; // Store the current time for the next frame
@@ -271,45 +295,72 @@ export class Game {
       this.player.lockedControls = false;
     } else if (this.loadingScreen.style.display === "flex") {
       this.loadingScreen.style.display = "none";
-      console.log("Hiding loading screen...");
     }
 
     if (this.player.lockedControls) {
       if (this.state.current !== "running") return;
       if (this.player.isDead) {
-        console.log("Player is dead, stopping animation.");
         return this.gameOver();
       }
 
       if (this.player.enemiesKilled.total > roundRequirements[this.round]) {
         this.round += 1;
       }
-
       this.manageEnemies();
+
       this.enemies.forEach((enemy) => {
         enemy.update(deltaTime);
-      });
 
-      const projectileStart = performance.now();
-      const hitEnemies = [];
-      this.player.weapon.projectiles.forEach((proj) => {
-        this.enemies.forEach((enemy) => {
-          if (
-            this.collisionManager.checkProjectileCollisionsWithRay(proj, enemy)
-          ) {
-            hitEnemies.push({ enemy, proj });
+        if (!enemy.collidedWithPlayer) {
+          if (this.collisionManager.checkEnemyCollisions(enemy, this.player)) {
+            playSound(
+              this.player.stats.currentHealth > 0
+                ? "/assets/audio/effects/hit.wav"
+                : "/assets/audio/effects/death.wav",
+              0.5
+            );
+
+            if (this.player.stats.currentHealth <= 0) {
+              this.player.isDead = true;
+            }
+
+            this.collisionManager.handleEnemyPlayerCollision(
+              enemy,
+              this.player
+            );
           }
+        }
+
+        const hitEnemies = [];
+        this.player.weapon.projectiles.forEach((proj) => {
+          this.enemies.forEach((enemy) => {
+            if (
+              this.collisionManager.checkProjectileCollisionsWithRay(
+                proj,
+                enemy
+              )
+            ) {
+              hitEnemies.push({ enemy, proj });
+            }
+          });
+        });
+
+        // Process damage after the collision checks
+        hitEnemies.forEach(({ enemy, proj }) => {
+          enemy.takeDamage(this.player.weapon.damage);
+          proj.onDestroy(proj);
+          this.player.showHitMarker();
         });
       });
 
-      hitEnemies.forEach(({ enemy, proj }) => {
-        enemy.takeDamage(this.player.weapon.damage);
-        proj.onDestroy(proj);
-        this.player.showHitMarker();
-      });
-
+      // Update light position based on player direction
       this.player.update(deltaTime); // Pass deltaTime to the player's update function
+      this.view.update(deltaTime);
       this.renderer.render(this.scene, this.camera);
     }
+    // End of performance monitoring
+    stats1.end();
+    stats2.end();
+    stats3.end();
   }
 }
