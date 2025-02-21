@@ -39,6 +39,7 @@
           "albedo": "/assets/textures/walls/wall001/random_bricks_thick_diff_4k.jpg",
           "alt": "/assets/textures/walls/wall001/jasons_first_corno.jpg",
           "alt2": "/assets/textures/walls/wall001/chris_first_corno.jpg",
+          "alt3": "/assets/textures/walls/wall001/chainsaw.jpg",
           "normal": "/assets/textures/walls/wall001/random_bricks_thick_nor_dx_4k.jpg",
           "roughness": "/assets/textures/walls/wall001/random_bricks_thick_rough_4k.jpg",
           "metallic": "/assets/textures/walls/wall001/random_bricks_thick_nor_gl_4k.jpg",

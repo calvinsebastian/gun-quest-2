@@ -241,7 +241,17 @@ export class Level {
         },
       };
 
-      const { albedo, alt, alt2, normal, roughness, metallic, ao, height } = {
+      const {
+        albedo,
+        alt,
+        alt2,
+        alt3,
+        normal,
+        roughness,
+        metallic,
+        ao,
+        height,
+      } = {
         ...this.textures[wallConfig.wallTexturePack],
       };
 
@@ -252,6 +262,9 @@ export class Level {
             : wall[0].toString().includes("5") &&
               wall[1].toString().includes("5")
             ? alt2
+            : wall[0].toString().includes("4") &&
+              wall[1].toString().includes("4")
+            ? alt3
             : albedo,
         normalMap: normal,
         roughnessMap: roughness,
